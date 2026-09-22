@@ -5,6 +5,7 @@ This is the single source of truth for what AgriShield builds, in what order, an
 - [`V1_HACKATHON_DEMO.md`](./V1_HACKATHON_DEMO.md) — target: **2026-09-28**, the Hack4Africa pitch
 - [`V2_INTELLIGENCE_LAYER.md`](./V2_INTELLIGENCE_LAYER.md) — post-hackathon, through the POTRAZ Innovation Expo (Sept 29–Oct 2, 2026) and beyond
 - [`V3_ECOSYSTEM_FINANCE_MARKET.md`](./V3_ECOSYSTEM_FINANCE_MARKET.md) — later, evidence-gated
+- [`UI_UX_DESIGN_SPEC.md`](./UI_UX_DESIGN_SPEC.md) — an 8-screen mobile UI design brief (written spec only, not yet built), a low-end-device-first companion to `/prototype`
 
 ## The problem, simply put
 
