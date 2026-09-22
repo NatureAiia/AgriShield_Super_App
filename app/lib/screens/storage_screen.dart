@@ -34,40 +34,45 @@ class StorageScreen extends StatelessWidget {
                     Expanded(child: _SensorCard(label: 'INSIDE ZEER COOLER', reading: inside, highlight: true)),
                   ],
                 ),
-                if (gap != null) ...[
-                  const SizedBox(height: 10),
-                  AppCard(
-                    child: Row(
-                      children: [
-                        const Icon(Icons.water_drop, size: 18, color: AgriShieldColors.accent),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'The cooler is working — ${gap.toStringAsFixed(1)}°C cooler inside than outside right now, real evaporation, honestly reported.',
-                            style: const TextStyle(fontSize: 12, color: AgriShieldColors.primary),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  child: gap == null
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: AppCard(
+                            child: Row(
+                              children: [
+                                Icon(Icons.water_drop, size: 18, color: context.colors.secondary),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'The cooler is working — ${gap.toStringAsFixed(1)}°C cooler inside than outside right now, real evaporation, honestly reported.',
+                                    style: TextStyle(fontSize: 12, color: context.colors.onSurface),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
                 if (inside != null) ...[
                   const SizedBox(height: 10),
                   AppCard(
                     child: Row(
                       children: [
-                        const Icon(Icons.air, size: 18, color: AgriShieldColors.accent),
+                        Icon(Icons.air, size: 18, color: context.colors.secondary),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('CO2 (INSIDE)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.grey)),
+                              Text('CO2 (INSIDE)', style: context.text.labelSmall),
                               Text('${inside.co2Ppm.toStringAsFixed(0)} ppm',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w800,
-                                    color: inside.co2High ? AgriShieldColors.alert : AgriShieldColors.primary,
+                                    color: inside.co2High ? context.colors.error : context.colors.onSurface,
                                   )),
                             ],
                           ),
@@ -81,7 +86,7 @@ class StorageScreen extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.eco, color: AgriShieldColors.accent, size: 20),
+                      Icon(Icons.eco, color: context.colors.secondary, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -89,7 +94,7 @@ class StorageScreen extends StatelessWidget {
                               ? 'Waiting for the sensor box…'
                               : "It's warmer than usual, so your crop is spoiling faster — about "
                                   "${inside.estimatedShelfLifeHours.toStringAsFixed(0)} hours of good condition left.",
-                          style: const TextStyle(color: AgriShieldColors.primary),
+                          style: TextStyle(color: context.colors.onSurface),
                         ),
                       ),
                     ],
@@ -113,26 +118,32 @@ class _SensorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final onHighlight = context.colors.onPrimary;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: highlight ? AgriShieldColors.primary : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AgriShieldColors.cardBorder),
+        color: highlight ? context.colors.primary : context.colors.surface,
+        borderRadius: BorderRadius.circular(AgriShieldRadii.card),
+        border: Border.all(color: context.colors.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: highlight ? Colors.white70 : Colors.grey)),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: highlight ? onHighlight.withOpacity(0.75) : context.colors.onSurface.withOpacity(0.6),
+              )),
           const SizedBox(height: 4),
           Text(
             reading == null ? '—' : '${reading!.temperatureC.toStringAsFixed(0)}°C',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: highlight ? Colors.white : AgriShieldColors.primary),
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: highlight ? onHighlight : context.colors.onSurface),
           ),
           Text(
             reading == null ? '' : '${reading!.humidityPercent.toStringAsFixed(0)}% humidity',
-            style: TextStyle(fontSize: 12, color: highlight ? Colors.white70 : Colors.grey),
+            style: TextStyle(fontSize: 12, color: highlight ? onHighlight.withOpacity(0.75) : context.colors.onSurface.withOpacity(0.6)),
           ),
         ],
       ),

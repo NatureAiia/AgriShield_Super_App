@@ -24,6 +24,16 @@ Built to make the app match the vision doc's own live-demo script (docs/roadmap/
 - **Home screen** has a "Trigger farmer alert now" button that calls the real `MessagingService` → backend `/alerts/send` round trip and shows the result — Moment 3, made actually triggerable rather than only theoretical.
 - **Branding**: the app bar uses the real logo from `/assets/logo/1.jpeg` (copied to `assets/branding/logo.jpeg` since Flutter asset bundling expects paths inside the project).
 
+## Dark / light mode
+
+`lib/theme.dart` builds real, separate `ColorScheme`s for light and dark (not a single palette with opacity tweaks) — every screen reads colors via a `context.colors`/`context.text` extension rather than a static constant, so the toggle actually changes what's on screen everywhere, not just the app bar. A sun/moon/auto icon in the app bar cycles System → Light → Dark, persisted locally via `ThemeController` (`lib/services/theme_controller.dart`) so the choice survives a restart.
+
+Every text/background pairing was checked against WCAG AA (4.5:1), not assumed — including two real contrast bugs found and fixed while building this: the mold-risk badge's vivid status colors (green/amber/red) failed badly against their own pale tint in light mode (as low as 1.93:1), and the satellite map's white "You" label failed against all three zone colors (2.1–3.8:1). Both now use separately-checked text colors / a dark backdrop rather than the raw brand color.
+
+## UI polish
+
+Built to a "dense dashboard, not a decorative landing screen" brief: a 2×2 bento grid of the real V1 signals on Home (shelf life, mold risk, CO2, cooler effect — nothing from V2/V3 invented to fill space), consistent 16px/14px corner radii everywhere via `AgriShieldRadii`, and real (not decorative) micro-interactions: `AnimatedSwitcher`/`AnimatedSize` on values and cards that change, a `Pressable` scale-down on the disease-scan capture button, skeleton shimmers (`ShimmerBox`) instead of bare "—" while a first reading or the satellite fetch is in flight, and pull-to-refresh on the Satellite screen (the one screen whose data is a one-shot fetch rather than a live stream, so it's the one place that pattern actually fits).
+
 ## Running
 
 Requires the Flutter SDK (not installed in this environment, so this hasn't been run here — see the repo's top-level notes on how this was verified instead).

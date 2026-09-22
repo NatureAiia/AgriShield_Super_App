@@ -28,22 +28,27 @@ class _OfflineBannerState extends State<OfflineBanner> {
 
   @override
   Widget build(BuildContext context) {
-    if (_online) return const SizedBox.shrink();
-    return Container(
-      width: double.infinity,
-      color: AgriShieldColors.alert,
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.wifi_off, size: 14, color: Colors.white),
-          SizedBox(width: 6),
-          Text(
-            'Working offline — will sync when connected',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
-          ),
-        ],
-      ),
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      child: _online
+          ? const SizedBox(width: double.infinity)
+          : Container(
+              width: double.infinity,
+              color: context.colors.error,
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.wifi_off, size: 14, color: context.colors.onError),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Working offline — will sync when connected',
+                    style: TextStyle(color: context.colors.onError, fontWeight: FontWeight.w700, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }
