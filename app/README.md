@@ -8,12 +8,31 @@ No real hardware, trained model, or third-party credentials exist yet, so every 
 
 | Interface | File | Mock behavior | What a real implementation needs |
 |---|---|---|---|
-| `SensorService` | `lib/services/sensor_service.dart` | Simulated temp/humidity random walk | A Bluetooth LE or serial bridge to Part 1's physical sensor box |
+| `SensorService` | `lib/services/sensor_service.dart` | Two simulated streams — `outsideReadings()` and `insideCoolerReadings()` (temp/humidity/CO2) — with the inside reading pulled progressively cooler over time, so the Storage screen's "two thermometers" gap actually widens live, matching the vision doc's demo script | A Bluetooth LE or serial bridge to Part 1's physical sensor box(es) |
 | `DiseaseService` | `lib/services/disease_service.dart` | Canned result after a delay | A trained `assets/model.tflite` (PlantVillage) + `tflite_flutter` |
 | `SatelliteService` | `lib/services/satellite_service.dart` | Calls the backend, falls back to a cached zone grid if unreachable | Backend-side Google Earth Engine credentials (see `/backend`) |
 | `MessagingService` | `lib/services/messaging_service.dart` | Calls the backend, which logs instead of sending | Backend-side Africa's Talking API key (see `/backend`) |
 
 Swapping a mock for a real implementation is a one-line change in `lib/main.dart` — nothing else depends on which implementation is in use.
+
+## Demo-day additions
+
+Built to make the app match the vision doc's own live-demo script (docs/roadmap/V1_HACKATHON_DEMO.md, "Moments 1–3") as closely as a mocked build can:
+
+- **Storage screen** shows outside vs. inside-cooler readings side by side, with a live "N°C cooler inside" readout that grows as the (simulated) cooler works — Moments 1 and 2.
+- **Mold risk** now follows OPIsystems' three-signal approach cited in the vision doc (§5.2): temperature, humidity, *and* CO2 — a CO2 spike alone is flagged as high risk, matching the doc's point that CO2 is meant to catch spoilage before anything else is visible.
+- **Home screen** has a "Trigger farmer alert now" button that calls the real `MessagingService` → backend `/alerts/send` round trip and shows the result — Moment 3, made actually triggerable rather than only theoretical.
+- **Branding**: the app bar uses the real logo from `/assets/logo/1.jpeg` (copied to `assets/branding/logo.jpeg` since Flutter asset bundling expects paths inside the project).
+
+## Dark / light mode
+
+`lib/theme.dart` builds real, separate `ColorScheme`s for light and dark (not a single palette with opacity tweaks) — every screen reads colors via a `context.colors`/`context.text` extension rather than a static constant, so the toggle actually changes what's on screen everywhere, not just the app bar. A sun/moon/auto icon in the app bar cycles System → Light → Dark, persisted locally via `ThemeController` (`lib/services/theme_controller.dart`) so the choice survives a restart.
+
+Every text/background pairing was checked against WCAG AA (4.5:1), not assumed — including two real contrast bugs found and fixed while building this: the mold-risk badge's vivid status colors (green/amber/red) failed badly against their own pale tint in light mode (as low as 1.93:1), and the satellite map's white "You" label failed against all three zone colors (2.1–3.8:1). Both now use separately-checked text colors / a dark backdrop rather than the raw brand color.
+
+## UI polish
+
+Built to a "dense dashboard, not a decorative landing screen" brief: a 2×2 bento grid of the real V1 signals on Home (shelf life, mold risk, CO2, cooler effect — nothing from V2/V3 invented to fill space), consistent 16px/14px corner radii everywhere via `AgriShieldRadii`, and real (not decorative) micro-interactions: `AnimatedSwitcher`/`AnimatedSize` on values and cards that change, a `Pressable` scale-down on the disease-scan capture button, skeleton shimmers (`ShimmerBox`) instead of bare "—" while a first reading or the satellite fetch is in flight, and pull-to-refresh on the Satellite screen (the one screen whose data is a one-shot fetch rather than a live stream, so it's the one place that pattern actually fits).
 
 ## Running
 

@@ -7,25 +7,35 @@ import 'screens/profile_screen.dart';
 import 'screens/satellite_map_screen.dart';
 import 'screens/storage_screen.dart';
 import 'services/disease_service.dart';
+import 'services/messaging_service.dart';
 import 'services/satellite_service.dart';
 import 'services/sensor_service.dart';
+import 'services/theme_controller.dart';
 import 'theme.dart';
 import 'widgets/offline_banner.dart';
 
 void main() {
-  runApp(const AgriShieldApp());
+  runApp(AgriShieldApp(themeController: ThemeController()));
 }
 
 class AgriShieldApp extends StatelessWidget {
-  const AgriShieldApp({super.key});
+  final ThemeController themeController;
+  const AgriShieldApp({super.key, required this.themeController});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AgriShield',
-      debugShowCheckedModeBanner: false,
-      theme: buildAgriShieldTheme(),
-      home: const AgriShieldHome(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeController,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'AgriShield',
+          debugShowCheckedModeBanner: false,
+          theme: buildAgriShieldLightTheme(),
+          darkTheme: buildAgriShieldDarkTheme(),
+          themeMode: mode,
+          home: AgriShieldHome(themeController: themeController),
+        );
+      },
     );
   }
 }
@@ -35,7 +45,8 @@ class AgriShieldApp extends StatelessWidget {
 /// market layer, and the fintech layer are later-version roadmap, not
 /// screens here — see docs/roadmap/README.md's version table.
 class AgriShieldHome extends StatefulWidget {
-  const AgriShieldHome({super.key});
+  final ThemeController themeController;
+  const AgriShieldHome({super.key, required this.themeController});
 
   @override
   State<AgriShieldHome> createState() => _AgriShieldHomeState();
@@ -48,6 +59,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
   final SensorService _sensorService = MockSensorService();
   final DiseaseService _diseaseService = MockDiseaseService();
   final SatelliteService _satelliteService = MockSatelliteService();
+  final MessagingService _messagingService = MockMessagingService();
   final FarmerRepository _farmerRepository = FarmerRepository();
 
   int _tab = 0;
@@ -69,7 +81,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
     }
 
     final screens = [
-      HomeScreen(farmer: farmer, sensorService: _sensorService),
+      HomeScreen(farmer: farmer, sensorService: _sensorService, messagingService: _messagingService),
       StorageScreen(sensorService: _sensorService),
       DiseaseScanScreen(diseaseService: _diseaseService),
       SatelliteMapScreen(satelliteService: _satelliteService),
@@ -81,11 +93,35 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(_titles[_tab])),
+      appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset('assets/branding/logo.jpeg', fit: BoxFit.cover),
+          ),
+        ),
+        title: Text(_titles[_tab]),
+        actions: [
+          ListenableBuilder(
+            listenable: widget.themeController,
+            builder: (context, _) => IconButton(
+              icon: Icon(widget.themeController.icon),
+              tooltip: widget.themeController.label,
+              onPressed: widget.themeController.cycle,
+            ),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           const OfflineBanner(),
-          Expanded(child: screens[_tab]),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: KeyedSubtree(key: ValueKey(_tab), child: screens[_tab]),
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: NavigationBar(

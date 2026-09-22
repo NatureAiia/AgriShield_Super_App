@@ -40,7 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     widget.onSaved(_farmer);
   }
 
-  Widget _field(String key, String label, String value) {
+  Widget _field(BuildContext context, String key, String label, String value) {
     final editing = _editingField == key;
     return AppCard(
       child: Row(
@@ -49,20 +49,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.grey)),
-                editing
-                    ? TextField(
-                        controller: _controllers[key],
-                        autofocus: true,
-                        onSubmitted: (_) => _commit(key),
-                        style: const TextStyle(fontWeight: FontWeight.w800, color: AgriShieldColors.primary),
-                      )
-                    : Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AgriShieldColors.primary)),
+                Text(label.toUpperCase(), style: context.text.labelSmall),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 150),
+                  child: editing
+                      ? TextField(
+                          key: const ValueKey('editing'),
+                          controller: _controllers[key],
+                          autofocus: true,
+                          onSubmitted: (_) => _commit(key),
+                          style: TextStyle(fontWeight: FontWeight.w800, color: context.colors.onSurface),
+                        )
+                      : Text(
+                          value,
+                          key: const ValueKey('display'),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.colors.onSurface),
+                        ),
+                ),
               ],
             ),
           ),
           IconButton(
-            icon: Icon(editing ? Icons.check : Icons.edit, color: editing ? AgriShieldColors.accent : AgriShieldColors.primary),
+            icon: Icon(editing ? Icons.check : Icons.edit, color: editing ? context.colors.secondary : context.colors.onSurface),
             onPressed: () {
               if (editing) {
                 _commit(key);
@@ -81,17 +89,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _field('name', 'Name', _farmer.name),
+        _field(context, 'name', 'Name', _farmer.name),
         const SizedBox(height: 10),
-        _field('location', 'Location', _farmer.location),
+        _field(context, 'location', 'Location', _farmer.location),
         const SizedBox(height: 10),
-        _field('crop', 'Crop', _farmer.crop),
+        _field(context, 'crop', 'Crop', _farmer.crop),
         const SizedBox(height: 10),
-        _field('storageHub', 'Storage hub', _farmer.storageHub),
+        _field(context, 'storageHub', 'Storage hub', _farmer.storageHub),
         const SizedBox(height: 16),
-        const Center(
-          child: Text('Tap the icon, edit, tap the check — two taps to update.',
-              style: TextStyle(fontSize: 12, color: Colors.grey)),
+        Center(
+          child: Text(
+            'Tap the icon, edit, tap the check — two taps to update.',
+            style: TextStyle(fontSize: 12, color: context.colors.onSurface.withOpacity(0.6)),
+          ),
         ),
       ],
     );

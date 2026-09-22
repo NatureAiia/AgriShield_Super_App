@@ -21,6 +21,7 @@ class StorageReadingIn(BaseModel):
     farmer_id: str
     temperature_c: float
     humidity_percent: float
+    co2_ppm: float = 420.0
 
 
 class StorageReadingOut(StorageReadingIn):
