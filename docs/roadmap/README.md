@@ -48,7 +48,12 @@ A separate "blue-sky" document (`AgriShield_Innovate.docx`) proposes a further t
 
 ## The prototype
 
-[`/prototype`](../../prototype) holds a UI vision prototype (`AgriShieldApp.jsx`, React + Tailwind) and a first-pass database schema/architecture sketch (`schema.sql`, `ARCHITECTURE.md`) that together span all three versions' features in one screen. All data shown in the prototype is hardcoded/simulated — see the file headers for the version each tab maps to.
+[`/prototype`](../../prototype) holds two React + Tailwind UI prototypes and a first-pass database schema/architecture sketch (`schema.sql`, `ARCHITECTURE.md`):
+
+- `AgriShieldApp.jsx` — an aesthetic "super app" showcase spanning all three versions' features in one dark-themed screen.
+- `AgriShieldMobileApp.jsx` — a usability-first, low-end-Android build of the brief in [`UI_UX_DESIGN_SPEC.md`](./UI_UX_DESIGN_SPEC.md), in that spec's own lighter palette.
+
+Both are UI shells with hardcoded/simulated data, no backend. The two use different palettes and design intents by design — not yet reconciled into one canonical direction (see the spec doc's honest flags).
 
 ## Source documents
 
