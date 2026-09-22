@@ -7,6 +7,7 @@ import 'screens/profile_screen.dart';
 import 'screens/satellite_map_screen.dart';
 import 'screens/storage_screen.dart';
 import 'services/disease_service.dart';
+import 'services/messaging_service.dart';
 import 'services/satellite_service.dart';
 import 'services/sensor_service.dart';
 import 'theme.dart';
@@ -48,6 +49,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
   final SensorService _sensorService = MockSensorService();
   final DiseaseService _diseaseService = MockDiseaseService();
   final SatelliteService _satelliteService = MockSatelliteService();
+  final MessagingService _messagingService = MockMessagingService();
   final FarmerRepository _farmerRepository = FarmerRepository();
 
   int _tab = 0;
@@ -69,7 +71,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
     }
 
     final screens = [
-      HomeScreen(farmer: farmer, sensorService: _sensorService),
+      HomeScreen(farmer: farmer, sensorService: _sensorService, messagingService: _messagingService),
       StorageScreen(sensorService: _sensorService),
       DiseaseScanScreen(diseaseService: _diseaseService),
       SatelliteMapScreen(satelliteService: _satelliteService),
@@ -81,7 +83,16 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(_titles[_tab])),
+      appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset('assets/branding/logo.jpeg', fit: BoxFit.cover),
+          ),
+        ),
+        title: Text(_titles[_tab]),
+      ),
       body: Column(
         children: [
           const OfflineBanner(),

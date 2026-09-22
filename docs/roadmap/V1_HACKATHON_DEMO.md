@@ -10,6 +10,8 @@ Prove, live and in front of judges, that the core hardware and on-device AI actu
 
 Scaffolded: [`/app`](../../app) (Flutter, Home/Storage/Scan/Map/Profile screens) and [`/backend`](../../backend) (FastAPI, endpoints for all four). No real hardware, trained model, or GEE/Africa's Talking credentials exist yet, so every external integration is a mocked implementation behind a small interface — see each directory's README for exactly what's mocked and what swapping in the real thing needs. The backend's endpoints are exercised end-to-end by `backend/tests/test_v1_flow.py` (actually run, not just written); the Flutter app hasn't been run (no Flutter SDK in this environment) — its screens were written against the same interfaces and reviewed, but not build-verified.
 
+**Demo-day pass:** the mold-risk signal now follows §5.2's three-signal approach exactly (temperature + humidity + CO2, not just the first two), the Storage screen shows both sensor placements side by side with the gap between them visibly growing (Moments 1–2), and the "phone rings" alert (Moment 3) is a real button wired through to the backend, not just described. Full detail in `app/README.md`'s "Demo-day additions."
+
 ## Scope — what's built
 
 ### Foundation

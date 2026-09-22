@@ -30,7 +30,7 @@ pytest
 |---|---|---|
 | POST | `/farmers` | Create a farmer record |
 | GET | `/farmers/{id}` | Fetch a farmer record |
-| POST | `/storage/readings` | Sync a Part 1 sensor reading |
+| POST | `/storage/readings` | Sync a Part 1 sensor reading (temperature, humidity, CO2 — the three-signal mold-risk approach from the vision doc §5.2) |
 | GET | `/storage/readings/{farmer_id}` | List a farmer's readings |
 | POST | `/scans` | Sync a Part 2 disease-scan result |
 | GET | `/scans/{farmer_id}` | List a farmer's scans |

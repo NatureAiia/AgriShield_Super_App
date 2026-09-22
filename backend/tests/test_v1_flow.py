@@ -29,9 +29,10 @@ def test_v1_flow():
 
     r = client.post(
         "/storage/readings",
-        json={"farmer_id": farmer["id"], "temperature_c": 31.5, "humidity_percent": 68.0},
+        json={"farmer_id": farmer["id"], "temperature_c": 31.5, "humidity_percent": 68.0, "co2_ppm": 1350.0},
     )
     assert r.status_code == 200
+    assert r.json()["co2_ppm"] == 1350.0
 
     r = client.get(f"/storage/readings/{farmer['id']}")
     assert r.status_code == 200

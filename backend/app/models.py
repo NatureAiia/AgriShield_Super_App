@@ -35,7 +35,13 @@ class Farmer(Base):
 
 
 class StorageReading(Base):
-    """Part 1 — one reading from the solar sensor box."""
+    """Part 1 — one reading from the solar sensor box.
+
+    co2_ppm follows the vision doc's OPIsystems citation (§5.2): temperature,
+    dampness, and CO2 are the three real signals used to catch spoiling
+    grain early, since rotting/infested grain breathes out extra CO2 before
+    anything is visible.
+    """
 
     __tablename__ = "storage_readings"
 
@@ -43,6 +49,7 @@ class StorageReading(Base):
     farmer_id: Mapped[str] = mapped_column(String, ForeignKey("farmers.id"))
     temperature_c: Mapped[float] = mapped_column(Float, nullable=False)
     humidity_percent: Mapped[float] = mapped_column(Float, nullable=False)
+    co2_ppm: Mapped[float] = mapped_column(Float, nullable=False, default=420.0)
     taken_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     farmer: Mapped["Farmer"] = relationship(back_populates="storage_readings")
