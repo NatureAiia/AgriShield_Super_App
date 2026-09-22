@@ -1,6 +1,6 @@
 # AgriShield — Mobile UI Design Spec (8-Screen Demo)
 
-**Status: written design brief only — not yet built.** This documents a UI/UX brief provided during planning, for a future interactive prototype or screen-mockup pass. No code was generated from it in this session; see [`/prototype`](../../prototype) for the one prototype that does exist (a different, earlier 5-tab build with its own palette — see **Reconciling with the existing prototype** below).
+**Status: built.** This brief is now implemented as an interactive prototype: [`/prototype/AgriShieldMobileApp.jsx`](../../prototype/AgriShieldMobileApp.jsx) — a separate component from the earlier [`AgriShieldApp.jsx`](../../prototype/AgriShieldApp.jsx) prototype, using this brief's own palette rather than that one's. See **Honest flags on this brief** below for how the two relate.
 
 ## Brief, as given
 
@@ -35,16 +35,16 @@ Rounded cards, generous spacing, a bottom navigation bar with 5 icon tabs. Overa
 7. **Alerts/Notifications screen** — a chronological feed of every SMS/voice/text alert the farmer has received, grouped by day.
 8. **Profile/Setup screen** — farmer name, rough location, crop type, and storage hub, editable in two taps.
 
-With only 5 bottom-nav tabs for 8 screens, the natural split (not specified in the brief, left as an open question for whoever builds this) is: **5 primary tabs** — Home, Storage, Disease Scan, Satellite Map, Market Connect — with **Alerts and Profile** reached from Home (e.g. a header icon / quick-action card), matching the "Quick Services" pattern already used in `/prototype/AgriShieldApp.jsx`.
+With only 5 bottom-nav tabs for 8 screens, the brief doesn't specify the split. `AgriShieldMobileApp.jsx` resolves it as: **5 primary tabs** — Home, Storage, Disease Scan, Satellite Map, Market Connect — with **Alerts, Profile, and Agri-Rover** reached from Home via three quick-access icons, matching the "Quick Services" pattern already used in `/prototype/AgriShieldApp.jsx`.
 
 ## Honest flags on this brief
 
 Consistent with this roadmap's honesty principle (see [`README.md`](./README.md)):
 
-- **The Agri-Rover screen conflicts with this roadmap's own scope.** `README.md` names the Agri-Rover explicitly as part of the out-of-scope "blue-sky" tier (`AgriShield_Innovate.docx`) — a real prior capstone-project robot design, not something any committed V1/V2/V3 version builds. If this screen gets built, it should be visibly marked as illustrating a **moonshot / future-vision** feature, not implying a working rover exists or is planned in the committed roadmap. This isn't a reason to drop the screen — the source docs treat the Agri-Rover as a real, named idea worth showing — just a reason not to present it as more built than it is.
+- **The Agri-Rover screen conflicts with this roadmap's own scope.** `README.md` names the Agri-Rover explicitly as part of the out-of-scope "blue-sky" tier (`AgriShield_Innovate.docx`) — a real prior capstone-project robot design, not something any committed V1/V2/V3 version builds. `AgriShieldMobileApp.jsx`'s Rover screen carries an in-app banner saying so plainly ("Future vision — not part of the current build") rather than implying a working rover exists.
 - **This brief's screens roughly span V1 + V3, skipping V2 and most of the fintech layer.** Storage/Disease/Satellite map to V1 (hackathon demo); Market Connect maps to V3's simple contact-introduction feature (§14.5 in the original source material); none of V2's weather/price/planting/waste-to-feed/pest modules, and none of V3's insurance/BNPL/wallet features, appear here. That's a reasonable smaller cut for a design demo, not an error — just noted so nobody reads this as the full app's screen count.
 - **The palette here differs from `/prototype/AgriShieldApp.jsx`'s existing dark slate/emerald/sky/indigo theme.** This brief specifies a lighter, warmer palette (`#1B4332` / `#2D6A4F` / `#B45309` / `#F1F8F4` on an off-white background) explicitly for low-end-device, high-contrast, low-literacy readability — a different design intent (usability-first) than the existing prototype (aesthetic super-app showcase). If both get built, they should be treated as two distinct design directions, not merged silently — pick one as canonical before a real build, or keep them as labeled alternatives.
 
-## What unlocks building this
+## What this prototype doesn't resolve
 
-Nothing blocks starting a prototype build from this spec today — it depends on no unconfirmed partner or data source beyond what V1/V3 already name (see those docs). The one thing worth resolving first is the palette/scope reconciliation above, so a build doesn't have to be redone once that's settled.
+It's a UI shell with hardcoded/simulated data (no backend, no real sensor, satellite, or buyer-list integration) — same caveat as `/prototype/AgriShieldApp.jsx`. The palette/scope reconciliation between the two prototypes (noted above) is still open: nothing in this build forces choosing one as canonical, it's just now easier to compare since both exist and can be viewed side by side.
