@@ -1,0 +1,26 @@
+name: agrishield
+description: >
+  AgriShield V1 — hackathon-demo scope (docs/roadmap/V1_HACKATHON_DEMO.md):
+  storage/shelf-life monitoring, offline disease scan, satellite district
+  view, over an offline-first farmer record.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  http: ^1.2.0
+  shared_preferences: ^2.2.2
+  connectivity_plus: ^6.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

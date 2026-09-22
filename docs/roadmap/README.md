@@ -55,6 +55,10 @@ A separate "blue-sky" document (`AgriShield_Innovate.docx`) proposes a further t
 
 Both are UI shells with hardcoded/simulated data, no backend. The two use different palettes and design intents by design — not yet reconciled into one canonical direction (see the spec doc's honest flags).
 
+## The real build
+
+[`/app`](../../app) (Flutter) and [`/backend`](../../backend) (FastAPI) are a V1 scaffold — real, running code, not a mockup, but every external integration (sensor hardware, the TFLite model, satellite, Africa's Talking) is mocked behind a small interface until the real thing exists. See [`V1_HACKATHON_DEMO.md`](./V1_HACKATHON_DEMO.md)'s "Build status" for exactly what's verified.
+
 ## Source documents
 
 This roadmap was synthesized from `AgriShield_SuperApp_Hybrid.docx` (the master reconciliation of six earlier concepts — CEAShack, farmScreen, an earlier Agri-Shield draft, AgriChill Africa, MbudziGuard, Mari Hub), `AgriShield_Feasibility_Innovation_Improvement_Study.docx`, `AgriShield_POTRAZ_SolutionSpecification.docx`, and `AgriShield_Innovate.docx`, plus a fintech concept and a UI/schema prototype provided directly during planning. The original documents have been superseded by this roadmap and removed from the repo to avoid drift between two sources of truth; recover them from git history if needed.
