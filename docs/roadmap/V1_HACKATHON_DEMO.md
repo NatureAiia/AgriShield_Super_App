@@ -6,6 +6,10 @@
 
 Prove, live and in front of judges, that the core hardware and on-device AI actually work — not slides, not a mockup. This is the only version scoped to a hard, near-term deadline; everything here has to be buildable and rehearsable in six days.
 
+## Build status
+
+Scaffolded: [`/app`](../../app) (Flutter, Home/Storage/Scan/Map/Profile screens) and [`/backend`](../../backend) (FastAPI, endpoints for all four). No real hardware, trained model, or GEE/Africa's Talking credentials exist yet, so every external integration is a mocked implementation behind a small interface — see each directory's README for exactly what's mocked and what swapping in the real thing needs. The backend's endpoints are exercised end-to-end by `backend/tests/test_v1_flow.py` (actually run, not just written); the Flutter app hasn't been run (no Flutter SDK in this environment) — its screens were written against the same interfaces and reviewed, but not build-verified.
+
 ## Scope — what's built
 
 ### Foundation
