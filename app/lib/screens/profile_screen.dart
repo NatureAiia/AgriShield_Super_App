@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../models/farmer.dart';
 import '../repositories/farmer_repository.dart';
 import '../theme.dart';
@@ -94,21 +95,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final fields = [
+      ('name', 'Name', _farmer.name),
+      ('location', 'Location', _farmer.location),
+      ('crop', 'Crop', _farmer.crop),
+      ('storageHub', 'Storage hub', _farmer.storageHub),
+    ];
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _field(context, 'name', 'Name', _farmer.name),
-        const SizedBox(height: 10),
-        _field(context, 'location', 'Location', _farmer.location),
-        const SizedBox(height: 10),
-        _field(context, 'crop', 'Crop', _farmer.crop),
-        const SizedBox(height: 10),
-        _field(context, 'storageHub', 'Storage hub', _farmer.storageHub),
-        const SizedBox(height: 16),
+        for (var i = 0; i < fields.length; i++) ...[
+          _field(context, fields[i].$1, fields[i].$2, fields[i].$3)
+              .animate()
+              .fadeIn(delay: (i * 60).ms, duration: 350.ms)
+              .slideX(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
+          const SizedBox(height: 10),
+        ],
+        const SizedBox(height: 6),
         Center(
           child: Text(
             'Tap the icon, edit, tap the check — two taps to update.',
-            style: TextStyle(fontSize: 12, color: context.colors.onSurface.withOpacity(0.6)),
+            style: TextStyle(fontSize: 12, color: context.colors.onSurface.withValues(alpha: 0.6)),
           ),
         ),
       ],

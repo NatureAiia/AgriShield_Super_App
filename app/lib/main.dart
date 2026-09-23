@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'models/farmer.dart';
 import 'repositories/farmer_repository.dart';
 import 'screens/disease_scan_screen.dart';
@@ -12,6 +13,7 @@ import 'services/satellite_service.dart';
 import 'services/sensor_service.dart';
 import 'services/theme_controller.dart';
 import 'theme.dart';
+import 'widgets/animated_nav_bar.dart';
 import 'widgets/offline_banner.dart';
 
 void main() {
@@ -77,7 +79,27 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
   Widget build(BuildContext context) {
     final farmer = _farmer;
     if (farmer == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset('assets/branding/logo.jpeg', width: 64, height: 64, fit: BoxFit.cover),
+              )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scaleXY(begin: 1.0, end: 1.06, duration: 900.ms, curve: Curves.easeInOut),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.secondary),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     final screens = [
@@ -101,12 +123,18 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
             child: Image.asset('assets/branding/logo.jpeg', fit: BoxFit.cover),
           ),
         ),
-        title: Text(_titles[_tab]),
+        title: Text(_titles[_tab], key: ValueKey(_tab))
+            .animate(key: ValueKey(_tab))
+            .fadeIn(duration: 220.ms)
+            .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic, duration: 220.ms),
         actions: [
           ListenableBuilder(
             listenable: widget.themeController,
             builder: (context, _) => IconButton(
-              icon: Icon(widget.themeController.icon),
+              icon: Icon(widget.themeController.icon, key: ValueKey(widget.themeController.icon))
+                  .animate(key: ValueKey(widget.themeController.icon))
+                  .scaleXY(begin: 0.5, end: 1, curve: Curves.easeOutBack, duration: 300.ms)
+                  .fadeIn(duration: 200.ms),
               tooltip: widget.themeController.label,
               onPressed: widget.themeController.cycle,
             ),
@@ -118,21 +146,30 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
           const OfflineBanner(),
           Expanded(
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 260),
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween(begin: const Offset(0, 0.04), end: Offset.zero).animate(
+                    CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+                  ),
+                  child: child,
+                ),
+              ),
               child: KeyedSubtree(key: ValueKey(_tab), child: screens[_tab]),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: AnimatedNavBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.thermostat), label: 'Storage'),
-          NavigationDestination(icon: Icon(Icons.camera_alt), label: 'Scan'),
-          NavigationDestination(icon: Icon(Icons.map), label: 'Map'),
-          NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
+        items: const [
+          NavItem(icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'Home'),
+          NavItem(icon: Icons.thermostat_outlined, selectedIcon: Icons.thermostat, label: 'Storage'),
+          NavItem(icon: Icons.camera_alt_outlined, selectedIcon: Icons.camera_alt, label: 'Scan'),
+          NavItem(icon: Icons.map_outlined, selectedIcon: Icons.map, label: 'Map'),
+          NavItem(icon: Icons.person_outline, selectedIcon: Icons.person, label: 'Profile'),
         ],
       ),
     );

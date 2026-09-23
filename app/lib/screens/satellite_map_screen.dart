@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../models/satellite_zone.dart';
 import '../services/satellite_service.dart';
 import '../theme.dart';
@@ -90,39 +91,43 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 6,
                 crossAxisSpacing: 6,
-                children: _zones.map((zone) {
-                  final selected = _selected?.id == zone.id;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selected = zone),
-                    child: AnimatedScale(
-                      duration: const Duration(milliseconds: 150),
-                      scale: selected ? 0.92 : 1.0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: _colorFor(zone.status),
-                          borderRadius: BorderRadius.circular(8),
-                          border: zone.isFarmerPlot ? Border.all(color: context.colors.onSurface, width: 3) : null,
+                children: [
+                  for (var i = 0; i < _zones.length; i++)
+                    Builder(builder: (context) {
+                      final zone = _zones[i];
+                      final selected = _selected?.id == zone.id;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selected = zone),
+                        child: AnimatedScale(
+                          duration: const Duration(milliseconds: 150),
+                          scale: selected ? 0.92 : 1.0,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: _colorFor(zone.status),
+                              borderRadius: BorderRadius.circular(8),
+                              border: zone.isFarmerPlot ? Border.all(color: context.colors.onSurface, width: 3) : null,
+                            ),
+                            child: zone.isFarmerPlot
+                                ? Center(
+                                    child: Container(
+                                      // White text directly on a saturated status color
+                                      // (green/amber/red) fails WCAG AA on its own
+                                      // (checked: 2.1-3.8:1) — a dark backdrop fixes it
+                                      // regardless of which status color is underneath.
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(alpha: 0.55),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Text('You', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12)),
+                                    ),
+                                  )
+                                : null,
+                          ),
                         ),
-                        child: zone.isFarmerPlot
-                            ? Center(
-                                child: Container(
-                                  // White text directly on a saturated status color
-                                  // (green/amber/red) fails WCAG AA on its own
-                                  // (checked: 2.1-3.8:1) — a dark backdrop fixes it
-                                  // regardless of which status color is underneath.
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.55),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: const Text('You', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12)),
-                                ),
-                              )
-                            : null,
-                      ),
-                    ),
-                  );
-                }).toList(),
+                      ).animate().fadeIn(delay: (i * 35).ms, duration: 300.ms).scaleXY(begin: 0.85, end: 1, curve: Curves.easeOutBack);
+                    }),
+                ],
               ),
             ),
           const SizedBox(height: 12),
@@ -149,7 +154,7 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
                               style: TextStyle(fontWeight: FontWeight.w800, color: context.colors.onSurface)),
                           const SizedBox(height: 4),
                           Text('Status: ${_labelFor(_selected!.status)}',
-                              style: TextStyle(fontSize: 12, color: context.colors.onSurface.withOpacity(0.6))),
+                              style: TextStyle(fontSize: 12, color: context.colors.onSurface.withValues(alpha: 0.6))),
                         ],
                       ),
                     ),
