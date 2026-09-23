@@ -9,8 +9,15 @@ class ProfileScreen extends StatefulWidget {
   final Farmer farmer;
   final FarmerRepository repository;
   final ValueChanged<Farmer> onSaved;
+  final VoidCallback onSignOut;
 
-  const ProfileScreen({super.key, required this.farmer, required this.repository, required this.onSaved});
+  const ProfileScreen({
+    super.key,
+    required this.farmer,
+    required this.repository,
+    required this.onSaved,
+    required this.onSignOut,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -118,7 +125,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(fontSize: 12, color: context.colors.onSurface.withValues(alpha: 0.6)),
           ),
         ),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => _confirmSignOut(context),
+            icon: const Icon(Icons.logout),
+            label: const Text('Sign out'),
+            style: OutlinedButton.styleFrom(foregroundColor: context.colors.error, side: BorderSide(color: context.colors.error)),
+          ),
+        ).animate().fadeIn(delay: 300.ms, duration: 350.ms),
       ],
     );
+  }
+
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text('You\'ll need the code sent to your phone to sign back in.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sign out')),
+        ],
+      ),
+    );
+    if (confirmed == true) widget.onSignOut();
   }
 }
