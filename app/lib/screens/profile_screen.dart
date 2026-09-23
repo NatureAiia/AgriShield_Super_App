@@ -25,6 +25,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     'storageHub': TextEditingController(text: _farmer.storageHub),
   };
 
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
   Future<void> _commit(String key) async {
     final value = _controllers[key]!.text;
     setState(() {
