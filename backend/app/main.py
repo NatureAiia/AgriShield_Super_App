@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from . import models
 from .database import Base, engine
-from .routers import alerts, farmers, satellite, scans, storage
+from .routers import alerts, farmers, recommendations, satellite, scans, storage
 
 Base.metadata.create_all(bind=engine)
 
@@ -23,6 +23,7 @@ app.include_router(storage.router)
 app.include_router(scans.router)
 app.include_router(satellite.router)
 app.include_router(alerts.router)
+app.include_router(recommendations.router)
 
 
 @app.get("/health")

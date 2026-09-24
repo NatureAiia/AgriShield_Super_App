@@ -36,4 +36,5 @@ pytest
 | GET | `/scans/{farmer_id}` | List a farmer's scans |
 | GET | `/satellite/zones` | Part 3 district zone grid (mock unless GEE is configured) |
 | POST | `/alerts/send` | Foundation alert channel (mock unless Africa's Talking is configured) |
+| POST | `/recommendations/crop` | V2 Module 6 prototype — top-3 crop suggestions from soil N/P/K, pH, temperature, humidity, rainfall. **Demo only:** trained at first request from the bundled Kaggle Crop Recommendation Dataset (India-oriented, no sorghum/wheat/tobacco/groundnuts/soybeans); every response carries `demo_only: true` and a `limitations` string |
 | GET | `/health` | Liveness check |
