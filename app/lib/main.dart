@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'models/farmer.dart';
 import 'repositories/farmer_repository.dart';
+import 'screens/auth/landing_screen.dart';
 import 'screens/disease_scan_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/recommendation_screen.dart';
 import 'screens/satellite_map_screen.dart';
 import 'screens/storage_screen.dart';
+import 'services/auth_service.dart';
 import 'services/disease_service.dart';
 import 'services/messaging_service.dart';
+import 'services/recommendation_service.dart';
 import 'services/satellite_service.dart';
 import 'services/sensor_service.dart';
 import 'services/theme_controller.dart';
@@ -62,55 +66,99 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
   final DiseaseService _diseaseService = MockDiseaseService();
   final SatelliteService _satelliteService = MockSatelliteService();
   final MessagingService _messagingService = MockMessagingService();
+  final RecommendationService _recommendationService = HttpRecommendationService();
+  final AuthService _authService = MockAuthService();
   final FarmerRepository _farmerRepository = FarmerRepository();
 
   int _tab = 0;
   Farmer? _farmer;
+  // null while the initial `isSignedIn` check is in flight (near-instant,
+  // local SharedPreferences read); false shows the landing/sign-up/sign-in
+  // flow, true proceeds straight to the app — a returning, already-signed
+  // -in farmer never sees the landing screen again.
+  bool? _signedIn;
 
-  static const _titles = ['AgriShield', 'Storage Sensor', 'Disease Scan', 'Satellite Map', 'Profile'];
+  static const _titles = [
+    'AgriShield', 'Storage Sensor', 'Disease Scan', 'Recommend', 'Satellite Map', 'Profile',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _farmerRepository.load().then((f) => setState(() => _farmer = f));
+    _authService.isSignedIn().then((signedIn) {
+      if (!mounted) return;
+      setState(() => _signedIn = signedIn);
+      if (signedIn) _loadFarmer();
+    });
+  }
+
+  void _loadFarmer() {
+    _farmerRepository.load().then((f) {
+      if (!mounted) return;
+      setState(() => _farmer = f);
+    });
+  }
+
+  void _onAuthenticated() {
+    setState(() => _signedIn = true);
+    _loadFarmer();
+  }
+
+  Future<void> _signOut() async {
+    await _authService.signOut();
+    if (!mounted) return;
+    setState(() {
+      _signedIn = false;
+      _farmer = null;
+      _tab = 0;
+    });
+  }
+
+  Widget _brandedLoading(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.asset('assets/branding/logo.jpeg', width: 64, height: 64, fit: BoxFit.cover),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scaleXY(begin: 1.0, end: 1.06, duration: 900.ms, curve: Curves.easeInOut),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.secondary),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final farmer = _farmer;
-    if (farmer == null) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.asset('assets/branding/logo.jpeg', width: 64, height: 64, fit: BoxFit.cover),
-              )
-                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .scaleXY(begin: 1.0, end: 1.06, duration: 900.ms, curve: Curves.easeInOut),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.secondary),
-              ),
-            ],
-          ),
-        ),
-      );
+    if (_signedIn == null) return _brandedLoading(context);
+    if (_signedIn == false) {
+      return LandingScreen(authService: _authService, onAuthenticated: _onAuthenticated);
     }
+
+    final farmer = _farmer;
+    if (farmer == null) return _brandedLoading(context);
 
     final screens = [
       HomeScreen(farmer: farmer, sensorService: _sensorService, messagingService: _messagingService),
       StorageScreen(sensorService: _sensorService),
       DiseaseScanScreen(diseaseService: _diseaseService),
+      RecommendationScreen(recommendationService: _recommendationService),
       SatelliteMapScreen(satelliteService: _satelliteService),
       ProfileScreen(
         farmer: farmer,
         repository: _farmerRepository,
         onSaved: (updated) => setState(() => _farmer = updated),
+        onSignOut: _signOut,
       ),
     ];
 
@@ -168,6 +216,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
           NavItem(icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'Home'),
           NavItem(icon: Icons.thermostat_outlined, selectedIcon: Icons.thermostat, label: 'Storage'),
           NavItem(icon: Icons.camera_alt_outlined, selectedIcon: Icons.camera_alt, label: 'Scan'),
+          NavItem(icon: Icons.eco_outlined, selectedIcon: Icons.eco, label: 'Recommend'),
           NavItem(icon: Icons.map_outlined, selectedIcon: Icons.map, label: 'Map'),
           NavItem(icon: Icons.person_outline, selectedIcon: Icons.person, label: 'Profile'),
         ],
