@@ -17,6 +17,12 @@ Swapping a mock for a real implementation is a one-line change in `lib/main.dart
 
 `RecommendationService` (`lib/services/recommendation_service.dart`, V2's Module 9) has no mock — the recommendation logic (a scikit-learn model + a CSV lookup) only exists server-side, so `HttpRecommendationService` always calls the backend and needs it reachable. `DiseaseService` also gained a second real implementation, `ServerDiseaseService`, calling the backend's `/scans/diagnose` as a heavier online alternative to the on-device mock — not wired in by default in `main.dart`, since Part 2's on-device check stays the primary flow.
 
+## Sign-in
+
+`AuthService` (`lib/services/auth_service.dart`) is Foundation's phone-number + OTP sign-in — the one interface here where the *real* implementation (`HttpAuthService`, calling the backend's `/auth/*` endpoints) is what's wired into `main.dart` by default, not a mock, since it needs no hardware/credentials beyond a reachable backend. It still can't send an actual SMS (no Africa's Talking account, same gap as `MessagingService`), so the generated code is shown on-screen labeled as demo mode rather than pretending to text it. `MockAuthService` (local-only, no backend) is kept in the same file as an offline-development alternative, not wired in.
+
+A first launch shows `screens/auth/landing_screen.dart` → sign-up (collects phone + the same Foundation fields Profile lets you edit later) or sign-in (phone only) → a shared OTP screen. A returning, already-signed-in farmer skips straight past it. Profile's "Sign out" clears the local session only — editing farmer fields in Profile after sign-up is still local-only (`FarmerRepository`'s own TODO), not synced back to the backend.
+
 ## Demo-day additions
 
 Built to make the app match the vision doc's own live-demo script (docs/roadmap/V1_HACKATHON_DEMO.md, "Moments 1–3") as closely as a mocked build can:
@@ -38,7 +44,7 @@ Built to a "dense dashboard, not a decorative landing screen" brief: a 2×2 bent
 
 ## Running
 
-Requires the Flutter SDK (not installed in this environment, so this hasn't been run here — see the repo's top-level notes on how this was verified instead).
+Requires the Flutter SDK. Verified in this project by running the real app live in Chrome (`flutter run -d chrome`) against a live backend — no Android SDK/emulator was available in that environment, so an actual Android device/emulator run is still outstanding.
 
 ```
 flutter pub get

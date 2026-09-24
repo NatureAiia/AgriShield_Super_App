@@ -8,7 +8,11 @@ import '../../widgets/otp_input.dart';
 
 /// Shared code-entry step for both sign-up and sign-in — the phone number
 /// and (for a new account) the farmer record collected on the previous
-/// screen are just carried through and saved once the code checks out.
+/// screen are just carried through. A correct code either completes
+/// sign-up (farmerDraft present) or, for sign-in, uses whatever account
+/// the backend found for this phone (see AuthService.verifyOtp) — either
+/// way the result is cached locally via FarmerRepository so the rest of
+/// the app keeps reading a local farmer record as before.
 class OtpScreen extends StatefulWidget {
   final AuthService authService;
   final String phone;
@@ -32,6 +36,7 @@ class _OtpScreenState extends State<OtpScreen> {
   String? _demoCode;
   bool _verifying = false;
   bool _shakeError = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -40,32 +45,60 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   Future<void> _sendCode() async {
-    final code = await widget.authService.requestOtp(widget.phone);
-    if (!mounted) return;
-    setState(() => _demoCode = code);
+    try {
+      final code = await widget.authService.requestOtp(widget.phone);
+      if (!mounted) return;
+      setState(() => _demoCode = code);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _errorMessage = 'Could not reach the server to send a code — check your connection and try again.');
+    }
   }
 
   Future<void> _verify(String code) async {
     setState(() {
       _verifying = true;
       _shakeError = false;
+      _errorMessage = null;
     });
-    final ok = await widget.authService.verifyOtp(widget.phone, code);
-    if (!mounted) return;
-    if (!ok) {
+    try {
+      final result = await widget.authService.verifyOtp(widget.phone, code);
+      if (!mounted) return;
+      if (!result.codeValid) {
+        setState(() {
+          _verifying = false;
+          _shakeError = true;
+        });
+        _otpKey.currentState?.clear();
+        return;
+      }
+
+      Farmer farmer;
+      final draft = widget.farmerDraft;
+      if (draft != null) {
+        farmer = await widget.authService.completeSignUp(phone: widget.phone, draft: draft);
+      } else if (result.farmer != null) {
+        farmer = result.farmer!;
+      } else {
+        setState(() {
+          _verifying = false;
+          _errorMessage = 'No account found for this number — go back and use "Get started" instead.';
+        });
+        _otpKey.currentState?.clear();
+        return;
+      }
+
+      await FarmerRepository().save(farmer);
+      if (!mounted) return;
+      widget.onAuthenticated();
+    } catch (_) {
+      if (!mounted) return;
       setState(() {
         _verifying = false;
-        _shakeError = true;
+        _errorMessage = 'Something went wrong reaching the server — try again.';
       });
       _otpKey.currentState?.clear();
-      return;
     }
-    final draft = widget.farmerDraft;
-    if (draft != null) {
-      await FarmerRepository().save(draft);
-    }
-    if (!mounted) return;
-    widget.onAuthenticated();
   }
 
   @override
@@ -103,6 +136,15 @@ class _OtpScreenState extends State<OtpScreen> {
               Text('That code didn\'t match — try again.', style: TextStyle(color: context.colors.error, fontWeight: FontWeight.w600))
                   .animate()
                   .fadeIn(duration: 200.ms),
+            if (_errorMessage != null && !_verifying)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: context.colors.error, fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+              ).animate().fadeIn(duration: 200.ms),
             const Spacer(),
             if (_demoCode != null)
               Container(

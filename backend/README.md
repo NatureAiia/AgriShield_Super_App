@@ -6,6 +6,8 @@ Scope: [`docs/roadmap/V1_HACKATHON_DEMO.md`](../docs/roadmap/V1_HACKATHON_DEMO.m
 
 `/satellite/zones` and `/alerts/send` work with **no credentials configured** — they return a mock zone grid / log the alert instead of sending it (see `app/services/`). Set `GEE_SERVICE_ACCOUNT_JSON` or `AFRICASTALKING_USERNAME`/`AFRICASTALKING_API_KEY` in `.env` (copy from `.env.example`) and the corresponding service raises `NotImplementedError` — the real call isn't written yet, since no such credential existed to test against. That's the one function each side needs filled in.
 
+`/auth/request-otp` and `/auth/verify-otp` (Foundation — phone-number sign-in) are real and persist to whatever `DATABASE_URL` points at, but still can't send an actual SMS for the same reason as `/alerts/send` — `request-otp` returns the generated code directly in its response instead, and the app shows it on-screen labeled as demo mode.
+
 ## Running
 
 ```
@@ -13,7 +15,11 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Defaults to a local SQLite file (`agrishield.db`) — set `DATABASE_URL` in `.env` to point at Postgres instead (the roadmap's recommended production database).
+Defaults to a local SQLite file (`agrishield.db`) — set `DATABASE_URL` in `.env` to point at Postgres instead (the roadmap's recommended production database; this project currently points it at a Supabase-hosted Postgres instance).
+
+### Why pg8000, not psycopg2
+
+`requirements.txt` pins `pg8000` (a pure-Python Postgres driver) rather than the far more common `psycopg2-binary`. On at least one dev machine used on this project, Windows Defender Application Control blocked psycopg2's compiled `_psycopg.pyd` outright (`ImportError: ... An Application Control policy has blocked this file`) — a machine-level policy, not fixable from application code. pg8000 has no compiled extension, so there's nothing for a code-integrity policy to block. If your own machine doesn't have this restriction, psycopg2-binary would work too; pg8000 was kept since it's proven to work everywhere this was tested. Needs `sslmode`/`ssl_context` explicitly since Supabase requires SSL — see `app/database.py`.
 
 ## Testing
 
@@ -28,7 +34,9 @@ pytest
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/farmers` | Create a farmer record |
+| POST | `/auth/request-otp` | Foundation — generate a sign-in code for a phone number (returned directly; see "mocked external integrations" above) |
+| POST | `/auth/verify-otp` | Foundation — check a code; returns the existing farmer for that phone if one exists (sign-in), or `null` (client then signs up via `POST /farmers`) |
+| POST | `/farmers` | Create a farmer record (also completes sign-up after `/auth/verify-otp`; 409 if the phone already has an account) |
 | GET | `/farmers/{id}` | Fetch a farmer record |
 | POST | `/storage/readings` | Sync a Part 1 sensor reading (temperature, humidity, CO2 — the three-signal mold-risk approach from the vision doc §5.2) |
 | GET | `/storage/readings/{farmer_id}` | List a farmer's readings |

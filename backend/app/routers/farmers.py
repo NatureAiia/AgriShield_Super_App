@@ -9,6 +9,9 @@ router = APIRouter(prefix="/farmers", tags=["farmers"])
 
 @router.post("", response_model=schemas.FarmerOut)
 def create_farmer(payload: schemas.FarmerIn, db: Session = Depends(get_db)):
+    existing = db.query(models.Farmer).filter(models.Farmer.phone == payload.phone).first()
+    if existing is not None:
+        raise HTTPException(status_code=409, detail="A farmer already exists for this phone number")
     farmer = models.Farmer(**payload.model_dump())
     db.add(farmer)
     db.commit()

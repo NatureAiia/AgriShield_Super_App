@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class FarmerIn(BaseModel):
+    phone: str
     name: str
     location: str
     crop: str
@@ -15,6 +16,29 @@ class FarmerOut(FarmerIn):
     model_config = ConfigDict(from_attributes=True)
     id: str
     created_at: datetime
+
+
+class OtpRequestIn(BaseModel):
+    phone: str
+
+
+class OtpRequestOut(BaseModel):
+    # Demo mode only — see OtpCode's docstring in app/models.py. A real
+    # send never echoes the code back to the caller.
+    code: str
+
+
+class OtpVerifyIn(BaseModel):
+    phone: str
+    code: str
+
+
+class OtpVerifyOut(BaseModel):
+    verified: bool
+    # The existing account for this phone, if any — present on a sign-in
+    # for a known number, absent (None) for a brand-new number, which the
+    # client then completes via POST /farmers.
+    farmer: FarmerOut | None = None
 
 
 class StorageReadingIn(BaseModel):

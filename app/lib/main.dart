@@ -67,7 +67,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
   final SatelliteService _satelliteService = MockSatelliteService();
   final MessagingService _messagingService = MockMessagingService();
   final RecommendationService _recommendationService = HttpRecommendationService();
-  final AuthService _authService = MockAuthService();
+  final AuthService _authService = HttpAuthService();
   final FarmerRepository _farmerRepository = FarmerRepository();
 
   int _tab = 0;

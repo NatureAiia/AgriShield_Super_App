@@ -43,6 +43,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _continue() {
     final draft = Farmer(
+      phone: _phone.text.trim(),
       name: _name.text.trim(),
       location: _location.text.trim(),
       crop: _crop.text.trim(),
