@@ -30,16 +30,57 @@ class StorageReadingOut(StorageReadingIn):
     taken_at: datetime
 
 
+class DiseaseScanSource(str, Enum):
+    on_device = "on_device"
+    server = "server"
+
+
 class DiseaseScanIn(BaseModel):
     farmer_id: str
     likely_issue: str
     confidence: float
+    source: DiseaseScanSource = DiseaseScanSource.on_device
 
 
 class DiseaseScanOut(DiseaseScanIn):
     model_config = ConfigDict(from_attributes=True)
     id: str
     scanned_at: datetime
+
+
+class DiseaseDiagnosisOut(BaseModel):
+    """Response for the synchronous server-side diagnosis endpoint —
+    distinct from DiseaseScanOut, which is the logged/synced record."""
+
+    likely_issue: str
+    advice: str
+
+
+class CropRecommendationIn(BaseModel):
+    nitrogen: float
+    phosphorous: float
+    potassium: float
+    ph: float
+    rainfall: float
+    temperature: float
+    humidity: float
+
+
+class CropRecommendationOut(BaseModel):
+    crop: str
+
+
+class FertilizerRecommendationIn(BaseModel):
+    crop: str
+    nitrogen: float
+    phosphorous: float
+    potassium: float
+
+
+class FertilizerRecommendationOut(BaseModel):
+    nutrient: str
+    direction: str
+    advice: str
 
 
 class ZoneStatus(str, Enum):

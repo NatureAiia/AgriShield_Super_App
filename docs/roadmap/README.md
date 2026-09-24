@@ -1,10 +1,11 @@
 # AgriShield Super App — Roadmap
 
-This is the single source of truth for what AgriShield builds, in what order, and why. It reconciles three inputs gathered during planning: the team's own six planning documents (root of this repo), a fintech-forward "super app" concept (AgriShield Score, parametric insurance, agrifinance/BNPL, marketplace), and a UI vision prototype (`/prototype`). Detail lives in three version docs:
+This is the single source of truth for what AgriShield builds, in what order, and why. It reconciles three inputs gathered during planning: the team's own six planning documents (root of this repo), a fintech-forward "super app" concept (AgriShield Score, parametric insurance, agrifinance/BNPL, marketplace), and a UI vision prototype (`/prototype`). Detail lives in these version docs:
 
 - [`V1_HACKATHON_DEMO.md`](./V1_HACKATHON_DEMO.md) — target: **2026-09-28**, the Hack4Africa pitch
 - [`V2_INTELLIGENCE_LAYER.md`](./V2_INTELLIGENCE_LAYER.md) — post-hackathon, through the POTRAZ Innovation Expo (Sept 29–Oct 2, 2026) and beyond
 - [`V3_ECOSYSTEM_FINANCE_MARKET.md`](./V3_ECOSYSTEM_FINANCE_MARKET.md) — later, evidence-gated
+- [`V4_FUTURE_EXPLORATION.md`](./V4_FUTURE_EXPLORATION.md) — unscheduled, unconfirmed ideas (federated learning, a multilingual chatbot) with no reference implementation to build from
 - [`UI_UX_DESIGN_SPEC.md`](./UI_UX_DESIGN_SPEC.md) — an 8-screen mobile UI design brief (written spec only, not yet built), a low-end-device-first companion to `/prototype`
 
 ## The problem, simply put

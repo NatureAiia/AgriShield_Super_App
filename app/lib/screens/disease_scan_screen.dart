@@ -108,6 +108,10 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
                           '${_result!.confidenceLabel} — first opinion, not a final answer.',
                           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: context.colors.onSurface.withValues(alpha: 0.6)),
                         ),
+                        if (_result!.advice != null) ...[
+                          const SizedBox(height: 10),
+                          Text(_result!.advice!, style: TextStyle(color: context.colors.onSurface)),
+                        ],
                         const SizedBox(height: 14),
                         SizedBox(
                           width: double.infinity,

@@ -56,8 +56,10 @@ class StorageReading(Base):
 
 
 class DiseaseScan(Base):
-    """Part 2 — one offline disease-check result, logged when the phone
-    next syncs (the check itself runs on-device with no internet)."""
+    """Part 2 — one disease-check result. `source` distinguishes the
+    original on-device offline check (logged when the phone next syncs)
+    from V2's server-side diagnosis (backend/app/services/disease_model_service.py),
+    which both write to this same table."""
 
     __tablename__ = "disease_scans"
 
@@ -65,6 +67,7 @@ class DiseaseScan(Base):
     farmer_id: Mapped[str] = mapped_column(String, ForeignKey("farmers.id"))
     likely_issue: Mapped[str] = mapped_column(String, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    source: Mapped[str] = mapped_column(String, nullable=False, default="on_device")
     scanned_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     farmer: Mapped["Farmer"] = relationship(back_populates="disease_scans")

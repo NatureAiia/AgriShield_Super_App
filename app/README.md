@@ -1,6 +1,6 @@
-# AgriShield — Flutter app (V1)
+# AgriShield — Flutter app (V1 + V2)
 
-Scope: [`docs/roadmap/V1_HACKATHON_DEMO.md`](../docs/roadmap/V1_HACKATHON_DEMO.md) — Foundation (offline-first farmer record) + Part 1 (storage/shelf-life) + Part 2 (offline disease scan) + Part 3 (satellite district view). Modules 4–8, the market layer, and the fintech layer are later-version roadmap and not built here — see [`docs/roadmap/README.md`](../docs/roadmap/README.md).
+Scope: [`docs/roadmap/V1_HACKATHON_DEMO.md`](../docs/roadmap/V1_HACKATHON_DEMO.md) — Foundation (offline-first farmer record) + Part 1 (storage/shelf-life) + Part 2 (offline disease scan) + Part 3 (satellite district view). Modules 4–8 and the market/fintech layers are later-version roadmap and not built here — see [`docs/roadmap/README.md`](../docs/roadmap/README.md) — except for V2's Module 9 (crop/fertilizer recommendation, server-side disease diagnosis; `docs/roadmap/V2_INTELLIGENCE_LAYER.md`), which is built here alongside V1.
 
 ## Status: scaffold with mocked integrations
 
@@ -14,6 +14,8 @@ No real hardware, trained model, or third-party credentials exist yet, so every 
 | `MessagingService` | `lib/services/messaging_service.dart` | Calls the backend, which logs instead of sending | Backend-side Africa's Talking API key (see `/backend`) |
 
 Swapping a mock for a real implementation is a one-line change in `lib/main.dart` — nothing else depends on which implementation is in use.
+
+`RecommendationService` (`lib/services/recommendation_service.dart`, V2's Module 9) has no mock — the recommendation logic (a scikit-learn model + a CSV lookup) only exists server-side, so `HttpRecommendationService` always calls the backend and needs it reachable. `DiseaseService` also gained a second real implementation, `ServerDiseaseService`, calling the backend's `/scans/diagnose` as a heavier online alternative to the on-device mock — not wired in by default in `main.dart`, since Part 2's on-device check stays the primary flow.
 
 ## Demo-day additions
 
