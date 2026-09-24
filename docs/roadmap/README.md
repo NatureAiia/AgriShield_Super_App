@@ -42,6 +42,7 @@ The team's own planning documents score themselves 9/10 on "every claim is backe
 - Known limitations are stated in the same breath as the feature that has them, not buried in a separate appendix.
 - V1 is never inflated: only Parts 1–3 (storage sensor, disease checker, satellite view) are demo-ready by the hackathon. Everything else — Modules 4–8, the market layer, and the entire fintech layer (AgriShield Score as a credit product, parametric insurance, BNPL, marketplace) — is roadmap, said plainly, not built yet.
 - The fintech layer in particular arrived far less sourced than the rest of the plan (a UI-mockup style "app builder" prompt, not a cited spec). It's included because it's a natural, well-precedented extension (real-world analogues: ACRE Africa, Pula Advisors for parametric insurance) — but **no insurance underwriter, lender, or credit bureau partner is confirmed for AgriShield**, and the roadmap says so at every mention, not once and then forgotten.
+- **Data collected stays minimal, on purpose:** a farmer's name, rough location, crop, and storage hub — no personal or health information beyond that, across every version. `backend/app/models.py`'s `Farmer` model already holds to exactly this (see [`backend/README.md`](../../backend/README.md)); nothing in V2/V3/V4 widens it without saying so here first.
 
 ## What's explicitly out of scope, beyond V3
 

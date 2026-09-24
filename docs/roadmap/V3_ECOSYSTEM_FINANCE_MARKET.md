@@ -28,7 +28,9 @@ Once several collection points run Parts 1+3 together, a risk signal seen at one
 
 ## Explicitly excluded from V3 and beyond
 
-A separate "blue-sky" document (`AgriShield_Innovate.docx`, superseded and removed — see git history) proposed a further tier this roadmap does not commit to: an "Agri-Rover" field robot, a paid PlanetScope satellite upgrade with multi-index remote sensing (NDVI/NDMI/NDRE/MSAVI) and variable-rate application, black-soldier-fly/hydroponic/aquaculture automation, a full solar buildout across every hardware piece, and one unified rover+sensor+satellite+pricing architecture. These stay a named moonshot tier, not a committed phase — real ideas, explicitly out of scope here.
+A separate "blue-sky" document (`AgriShield_Innovate.docx`, superseded and removed — see git history) proposed a further tier this roadmap does not commit to: an "Agri-Rover" field robot (see `V4_FUTURE_EXPLORATION.md`), a paid PlanetScope satellite upgrade with multi-index remote sensing (NDVI/NDMI/NDRE/MSAVI) and variable-rate application, black-soldier-fly/hydroponic/aquaculture automation, a full solar buildout across every hardware piece, and one unified rover+sensor+satellite+pricing architecture. These stay a named moonshot tier, not a committed phase — real ideas, explicitly out of scope here.
+
+Even that blue-sky tier draws its own line, on purpose: drone spraying, seeding, and aerial mapping; fully autonomous tractors, combine harvesters, and robotic weeders sold as standalone products; heavy machinery implements (rotavators, ploughs, balers); RTK centimetre-accuracy positioning; and general agronomic-practice advice (permaculture, crop rotation) are all real technologies, just a different project from what AgriShield's own mechanism — sensors, phones, and the data they generate — naturally extends into.
 
 ## Tech / data sources
 
