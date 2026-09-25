@@ -4,7 +4,7 @@ import '../theme.dart';
 
 /// Shown while Part 2's on-device check runs: a leaf under a sweeping scan
 /// line, corner brackets like a camera viewfinder, and plain-language
-/// steps ticking off. The steps describe what any leaf check does; they
+/// steps ticking off (the screen's own badge already says it's offline). The steps describe what any leaf check does; they
 /// don't claim more than the model underneath.
 class LeafScanAnimation extends StatelessWidget {
   const LeafScanAnimation({super.key});
@@ -59,23 +59,6 @@ class LeafScanAnimation extends StatelessWidget {
               ],
             ).animate().fadeIn(delay: (i * 380).ms, duration: 250.ms),
           ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: context.isDark ? 0.22 : 0.12),
-            borderRadius: BorderRadius.circular(AgriShieldRadii.pill),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.wifi_off_rounded, size: 14, color: accent),
-              const SizedBox(width: 6),
-              Text('On your phone · no internet needed',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent)),
-            ],
-          ),
-        ),
       ],
     );
   }

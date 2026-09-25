@@ -71,6 +71,26 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
         // when content is shorter than the viewport.
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
+          // District header — frames the map as TV weather forecast, not tech demo.
+          Row(
+            children: [
+              Icon(Icons.satellite_alt, size: 18, color: context.colors.secondary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text('Mashonaland East • Sentinel-2 • 5-day revisit',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.onSurface)),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                    color: context.colors.secondary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AgriShieldRadii.pill)),
+                child: Text('FREE DATA',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: context.colors.secondary)),
+              ),
+            ],
+          ).animate().fadeIn(duration: 300.ms),
+          const SizedBox(height: 10),
           if (_loading)
             AppCard(
               child: GridView.count(
@@ -122,13 +142,17 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
                                           // (green/amber/red) fails WCAG AA on its own
                                           // (checked: 2.1-3.8:1) — a dark backdrop fixes it
                                           // regardless of which status color is underneath.
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                           decoration: BoxDecoration(
-                                            color: Colors.black.withValues(alpha: 0.55),
+                                            color: Colors.black.withValues(alpha: 0.6),
                                             borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(color: Colors.white, width: 1.5),
                                           ),
-                                          child: const Text('You', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12)),
-                                        ),
+                                          child: const Text('YOU • Mai Moyo',
+                                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 10)),
+                                        )
+                                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                                            .scaleXY(begin: 1.0, end: 1.08, duration: 900.ms, curve: Curves.easeInOut),
                                       )
                                     : null,
                               ),
@@ -163,21 +187,47 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOut,
             child: _selected == null
-                ? const SizedBox(width: double.infinity)
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text('Tap a zone — your plot is marked YOU.',
+                        style: TextStyle(fontSize: 12, color: context.colors.onSurface.withValues(alpha: 0.6))),
+                  )
                 : Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: AppCard(
-                      child: Column(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_selected!.isFarmerPlot ? 'Your plot' : 'Zone ${_selected!.id}',
-                              style: TextStyle(fontWeight: FontWeight.w800, color: context.colors.onSurface)),
-                          const SizedBox(height: 4),
-                          Text('Status: ${_labelFor(_selected!.status)}',
-                              style: TextStyle(fontSize: 12, color: context.colors.onSurface.withValues(alpha: 0.6))),
+                          Container(
+                            width: 12,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: _colorFor(_selected!.status),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(_selected!.isFarmerPlot ? 'Your plot — Mai Moyo' : 'Zone ${_selected!.id}',
+                                    style: TextStyle(fontWeight: FontWeight.w800, color: context.colors.onSurface)),
+                                const SizedBox(height: 2),
+                                Text('Status: ${_labelFor(_selected!.status)}',
+                                    style: TextStyle(fontSize: 12, color: context.colors.onSurface.withValues(alpha: 0.7))),
+                                Text(
+                                  _selected!.status == ZoneStatus.healthy
+                                      ? 'Advice: keep scouting weekly.'
+                                      : 'Advice: check soil moisture, alert neighbours.',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.secondary),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                    ),
+                    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
                   ),
           ),
         ],
@@ -253,7 +303,7 @@ class _ScanStatusState extends State<_ScanStatus> {
     final color = context.colors.secondary;
     return Row(
       children: [
-        Icon(Icons.satellite_alt_rounded, size: 18, color: color)
+        Icon(Icons.radar_rounded, size: 18, color: color)
             .animate(onPlay: (c) => c.repeat(reverse: true))
             .rotate(begin: -0.03, end: 0.03, duration: 1200.ms),
         const SizedBox(width: 8),
