@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from . import models
 from .database import Base, engine
-from .routers import alerts, auth, farmers, recommendations, satellite, scans, storage
+from .routers import alerts, farmers, recommendations, satellite, scans, storage
 
 Base.metadata.create_all(bind=engine)
 
@@ -21,7 +21,6 @@ app = FastAPI(
     version="0.1.0",
 )
 
-app.include_router(auth.router)
 app.include_router(farmers.router)
 app.include_router(storage.router)
 app.include_router(scans.router)

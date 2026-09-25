@@ -10,7 +10,7 @@ backend and aren't included here.
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String
+from sqlalchemy import DateTime, Float, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -21,6 +21,11 @@ def _uuid() -> str:
 
 
 class Farmer(Base):
+    """Also the Foundation's sign-up/sign-in identity: phone is unique, and
+    signing in is just looking a farmer up by phone (see
+    app/routers/farmers.py's /by-phone/{phone}) — no password or code, on
+    purpose, to keep this a one-step, low-friction flow for a demo."""
+
     __tablename__ = "farmers"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
@@ -33,24 +38,6 @@ class Farmer(Base):
 
     storage_readings: Mapped[list["StorageReading"]] = relationship(back_populates="farmer")
     disease_scans: Mapped[list["DiseaseScan"]] = relationship(back_populates="farmer")
-
-
-class OtpCode(Base):
-    """Foundation — phone-number sign-in. No SMS credentials exist yet
-    (same gap as MessagingService — see app/services/messaging_service.py),
-    so the code generated here is returned directly in the /auth/request-otp
-    response for the app to show on-screen, instead of actually being
-    texted — same honesty-flagged-mock pattern as every other unconfigured
-    V1 integration. Real send/expiry-cleanup logic goes here once Africa's
-    Talking credentials exist."""
-
-    __tablename__ = "otp_codes"
-
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
-    phone: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    code: Mapped[str] = mapped_column(String, nullable=False)
-    consumed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class StorageReading(Base):

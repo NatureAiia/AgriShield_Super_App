@@ -6,7 +6,7 @@ Scope: [`docs/roadmap/V1_HACKATHON_DEMO.md`](../docs/roadmap/V1_HACKATHON_DEMO.m
 
 `/satellite/zones` and `/alerts/send` work with **no credentials configured** — they return a mock zone grid / log the alert instead of sending it (see `app/services/`). Set `GEE_SERVICE_ACCOUNT_JSON` or `AFRICASTALKING_USERNAME`/`AFRICASTALKING_API_KEY` in `.env` (copy from `.env.example`) and the corresponding service raises `NotImplementedError` — the real call isn't written yet, since no such credential existed to test against. That's the one function each side needs filled in.
 
-`/auth/request-otp` and `/auth/verify-otp` (Foundation — phone-number sign-in) are real and persist to whatever `DATABASE_URL` points at, but still can't send an actual SMS for the same reason as `/alerts/send` — `request-otp` returns the generated code directly in its response instead, and the app shows it on-screen labeled as demo mode.
+Foundation sign-up/sign-in (`POST /farmers`, `GET /farmers/by-phone/{phone}`) is real and persists to whatever `DATABASE_URL` points at — no password or verification code by design, a deliberate demo-scope tradeoff for a one-step, low-friction flow (see `Farmer`'s docstring in `app/models.py`), not a mocked integration like the others on this list.
 
 ## Running
 
@@ -34,9 +34,8 @@ pytest
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/auth/request-otp` | Foundation — generate a sign-in code for a phone number (returned directly; see "mocked external integrations" above) |
-| POST | `/auth/verify-otp` | Foundation — check a code; returns the existing farmer for that phone if one exists (sign-in), or `null` (client then signs up via `POST /farmers`) |
-| POST | `/farmers` | Create a farmer record (also completes sign-up after `/auth/verify-otp`; 409 if the phone already has an account) |
+| POST | `/farmers` | Sign up / create a farmer record (409 if the phone already has an account) |
+| GET | `/farmers/by-phone/{phone}` | Sign in — look up a farmer by phone (404 if none) |
 | GET | `/farmers/{id}` | Fetch a farmer record |
 | POST | `/storage/readings` | Sync a Part 1 sensor reading (temperature, humidity, CO2 — the three-signal mold-risk approach from the vision doc §5.2) |
 | GET | `/storage/readings/{farmer_id}` | List a farmer's readings |

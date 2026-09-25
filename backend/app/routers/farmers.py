@@ -19,6 +19,17 @@ def create_farmer(payload: schemas.FarmerIn, db: Session = Depends(get_db)):
     return farmer
 
 
+@router.get("/by-phone/{phone}", response_model=schemas.FarmerOut)
+def get_farmer_by_phone(phone: str, db: Session = Depends(get_db)):
+    """Sign-in: no password or code, just a phone-number lookup — see
+    Farmer's docstring in app/models.py for why that's an intentional
+    demo-scope tradeoff, not an oversight."""
+    farmer = db.query(models.Farmer).filter(models.Farmer.phone == phone).first()
+    if farmer is None:
+        raise HTTPException(status_code=404, detail="No account for this phone number")
+    return farmer
+
+
 @router.get("/{farmer_id}", response_model=schemas.FarmerOut)
 def get_farmer(farmer_id: str, db: Session = Depends(get_db)):
     farmer = db.get(models.Farmer, farmer_id)

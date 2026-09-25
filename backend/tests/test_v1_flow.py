@@ -64,25 +64,14 @@ def test_v1_flow():
     assert r.json()["sent"] is True
 
 
-def test_phone_otp_sign_up_and_sign_in():
+def test_phone_sign_up_and_sign_in():
     phone = "+263779998888"
 
-    # A brand-new number: verify-otp succeeds but no farmer exists yet.
-    r = client.post("/auth/request-otp", json={"phone": phone})
-    assert r.status_code == 200
-    code = r.json()["code"]
+    # No account yet for this phone.
+    r = client.get(f"/farmers/by-phone/{phone}")
+    assert r.status_code == 404
 
-    r = client.post("/auth/verify-otp", json={"phone": phone, "code": code})
-    assert r.status_code == 200
-    body = r.json()
-    assert body["verified"] is True
-    assert body["farmer"] is None
-
-    # A used code can't be replayed.
-    r = client.post("/auth/verify-otp", json={"phone": phone, "code": code})
-    assert r.status_code == 400
-
-    # Complete sign-up with that verified phone.
+    # Sign up.
     r = client.post(
         "/farmers",
         json={"phone": phone, "name": "Rudo Chikafu", "location": "Bulawayo", "crop": "Sorghum", "storage_hub": "Bulawayo Depot"},
@@ -96,16 +85,7 @@ def test_phone_otp_sign_up_and_sign_in():
     )
     assert r.status_code == 409
 
-    # Signing back in with that phone now returns the existing farmer.
-    r = client.post("/auth/request-otp", json={"phone": phone})
-    code = r.json()["code"]
-    r = client.post("/auth/verify-otp", json={"phone": phone, "code": code})
+    # Signing in with that phone returns the existing farmer.
+    r = client.get(f"/farmers/by-phone/{phone}")
     assert r.status_code == 200
-    body = r.json()
-    assert body["verified"] is True
-    assert body["farmer"]["name"] == "Rudo Chikafu"
-
-    # The wrong code is rejected.
-    r = client.post("/auth/request-otp", json={"phone": phone})
-    r = client.post("/auth/verify-otp", json={"phone": phone, "code": "0000"})
-    assert r.status_code == 400
+    assert r.json()["name"] == "Rudo Chikafu"
