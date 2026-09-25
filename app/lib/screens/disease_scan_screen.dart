@@ -40,8 +40,27 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // Offline badge — the stunt judges remember: Wi-Fi OFF, still works.
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: context.colors.primary,
+            borderRadius: BorderRadius.circular(AgriShieldRadii.pill),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.wifi_off, size: 14, color: context.colors.onPrimary),
+              const SizedBox(width: 6),
+              Text('OFFLINE AI — no internet needed',
+                  style: TextStyle(
+                      color: context.colors.onPrimary, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.4)),
+            ],
+          ),
+        ).animate().fadeIn(duration: 300.ms),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 32),
           decoration: BoxDecoration(
             color: context.colors.surface,
             borderRadius: BorderRadius.circular(AgriShieldRadii.card),
@@ -55,16 +74,30 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
                       key: const ValueKey('scanning'),
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SizedBox(
-                          width: 64,
-                          height: 64,
-                          child: CircularProgressIndicator(strokeWidth: 3, color: context.colors.secondary),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 140,
+                              height: 140,
+                              decoration: BoxDecoration(
+                                color: context.colors.secondary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: context.colors.secondary.withValues(alpha: 0.4)),
+                              ),
+                              child: Icon(Icons.eco, size: 56, color: context.colors.secondary.withValues(alpha: 0.5)),
+                            ),
+                            // Laser sweep — the sci-fi wow, pure flutter_animate.
+                            Container(width: 120, height: 3, color: context.colors.secondary)
+                                .animate(onPlay: (c) => c.repeat(reverse: true))
+                                .moveY(begin: -52, end: 52, duration: 900.ms, curve: Curves.easeInOut),
+                          ],
                         ),
                         const SizedBox(height: 14),
                         Text(
-                          'Checking leaf photo…',
+                          'Reading leaf… on-device AI',
                           style: TextStyle(color: context.colors.secondary, fontWeight: FontWeight.w700),
-                        ),
+                        ).animate(onPlay: (c) => c.repeat(reverse: true)).opacity(begin: 0.5, end: 1, duration: 700.ms),
                       ],
                     )
                   : Pressable(
@@ -102,11 +135,35 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
                       children: [
                         Text('LIKELY ISSUE', style: context.text.labelSmall),
                         Text(_result!.likelyIssue,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: context.colors.onSurface)),
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.colors.onSurface)),
                         const SizedBox(height: 6),
-                        Text(
-                          '${_result!.confidenceLabel} — first opinion, not a final answer.',
-                          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: context.colors.onSurface.withValues(alpha: 0.6)),
+                        // Confidence bar — animates from 0 to value on reveal.
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: _result!.confidence.clamp(0.0, 1.0)),
+                          duration: const Duration(milliseconds: 800),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, v, _) => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: LinearProgressIndicator(
+                                  value: v,
+                                  minHeight: 8,
+                                  backgroundColor: context.colors.outline,
+                                  valueColor: AlwaysStoppedAnimation<Color>(context.colors.secondary),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${(_result!.confidence * 100).toStringAsFixed(0)}% • ${_result!.confidenceLabel} — first opinion, not a final answer.',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                    color: context.colors.onSurface.withValues(alpha: 0.65)),
+                              ),
+                            ],
+                          ),
                         ),
                         if (_result!.advice != null) ...[
                           const SizedBox(height: 10),
