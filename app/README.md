@@ -15,7 +15,7 @@ No real hardware, trained model, or third-party credentials exist yet, so every 
 
 Swapping a mock for a real implementation is a one-line change in `lib/main.dart` — nothing else depends on which implementation is in use.
 
-`RecommendationService` (`lib/services/recommendation_service.dart`, V2's Module 9) has no mock — the recommendation logic (a scikit-learn model + a CSV lookup) only exists server-side, so `HttpRecommendationService` always calls the backend and needs it reachable. `DiseaseService` also gained a second real implementation, `ServerDiseaseService`, calling the backend's `/scans/diagnose` as a heavier online alternative to the on-device mock — not wired in by default in `main.dart`, since Part 2's on-device check stays the primary flow.
+`RecommendationService` (`lib/services/recommendation_service.dart`, V2's Module 9) has no mock — the recommendation logic (a scikit-learn model + a CSV lookup) only exists server-side, so `HttpRecommendationService` always calls the backend and needs it reachable. The Recommend screen shows the top pick, the model's top-3 crops with a confidence bar each, and an amber demo-only notice (the backend's `limitations` text) right next to the answer; `test/recommendation_screen_test.dart` checks that in light and dark themes (`flutter test`). `DiseaseService` also gained a second real implementation, `ServerDiseaseService`, calling the backend's `/scans/diagnose` as a heavier online alternative to the on-device mock — not wired in by default in `main.dart`, since Part 2's on-device check stays the primary flow.
 
 ## Sign-in
 
