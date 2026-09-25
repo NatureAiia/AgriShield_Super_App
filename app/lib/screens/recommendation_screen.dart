@@ -114,6 +114,16 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                       _result!.crop,
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.colors.onSurface),
                     ),
+                    if (_result!.demoOnly) ...[
+                      const SizedBox(height: 10),
+                      _DemoNotice(limitations: _result!.limitations),
+                    ],
+                    if (_result!.suggestions.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Text('HOW SURE THE MODEL IS', style: context.text.labelSmall),
+                      const SizedBox(height: 8),
+                      for (final s in _result!.suggestions) _SuggestionRow(suggestion: s),
+                    ],
                     if (_result!.fertilizerAdvice != null) ...[
                       const SizedBox(height: 14),
                       Text(
@@ -140,6 +150,74 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
         decoration: InputDecoration(labelText: label, isDense: true),
         validator: (v) => (v == null || double.tryParse(v) == null) ? 'Enter a number' : null,
+      ),
+    );
+  }
+}
+
+/// Always-visible caution when the model is demo-only — the roadmap's
+/// honesty principle: the limitation sits next to the answer, not in a
+/// separate screen. Amber = caution, same in light and dark mode.
+class _DemoNotice extends StatelessWidget {
+  final String? limitations;
+  const _DemoNotice({this.limitations});
+
+  @override
+  Widget build(BuildContext context) {
+    const dot = AgriShieldStatus.moderate;
+    final textColor = AgriShieldStatus.text(dot, context.isDark);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(dot.withValues(alpha: context.isDark ? 0.22 : 0.14), context.colors.surface),
+        borderRadius: BorderRadius.circular(AgriShieldRadii.control),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, size: 18, color: textColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              limitations ?? 'Demo only — not validated for Zimbabwe. Check with an extension officer.',
+              style: TextStyle(fontSize: 13, color: textColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SuggestionRow extends StatelessWidget {
+  final CropSuggestion suggestion;
+  const _SuggestionRow({required this.suggestion});
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = (suggestion.confidence * 100).round();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(suggestion.crop, style: TextStyle(color: context.colors.onSurface))),
+              Text('$percent%', style: TextStyle(fontWeight: FontWeight.w700, color: context.colors.onSurface)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AgriShieldRadii.pill),
+            child: LinearProgressIndicator(
+              value: suggestion.confidence.clamp(0.0, 1.0),
+              minHeight: 6,
+              backgroundColor: context.colors.surfaceContainerHighest,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -51,7 +51,16 @@ class HttpRecommendationService implements RecommendationService {
     if (cropResponse.statusCode != 200) {
       throw Exception('Crop recommendation failed: ${cropResponse.statusCode}');
     }
-    final crop = (jsonDecode(cropResponse.body) as Map<String, dynamic>)['crop'] as String;
+    final cropData = jsonDecode(cropResponse.body) as Map<String, dynamic>;
+    final crop = cropData['crop'] as String;
+    final base = CropRecommendation(
+      crop: crop,
+      suggestions: (cropData['suggestions'] as List<dynamic>? ?? const [])
+          .map((s) => CropSuggestion.fromJson(s as Map<String, dynamic>))
+          .toList(),
+      demoOnly: cropData['demo_only'] as bool? ?? true,
+      limitations: cropData['limitations'] as String?,
+    );
 
     // Fertilizer advice is a best-effort follow-up — the crop reference
     // table doesn't cover every crop the model can predict, so a failure
@@ -71,16 +80,15 @@ class HttpRecommendationService implements RecommendationService {
           .timeout(const Duration(seconds: 10));
       if (fertResponse.statusCode == 200) {
         final data = jsonDecode(fertResponse.body) as Map<String, dynamic>;
-        return CropRecommendation(
-          crop: crop,
-          fertilizerNutrient: data['nutrient'] as String?,
-          fertilizerDirection: data['direction'] as String?,
-          fertilizerAdvice: data['advice'] as String?,
+        return base.withFertilizer(
+          nutrient: data['nutrient'] as String?,
+          direction: data['direction'] as String?,
+          advice: data['advice'] as String?,
         );
       }
     } catch (_) {
       // Fall through to a crop-only result.
     }
-    return CropRecommendation(crop: crop);
+    return base;
   }
 }
