@@ -67,8 +67,19 @@ class CropRecommendationIn(BaseModel):
     humidity: float
 
 
-class CropRecommendationOut(BaseModel):
+class CropSuggestion(BaseModel):
     crop: str
+    confidence: float
+
+
+class CropRecommendationOut(BaseModel):
+    """`crop` is the top pick (the field the app already reads); the
+    rest is additive — ranked alternatives plus honesty flags."""
+    crop: str
+    suggestions: list[CropSuggestion] = []
+    demo_only: bool = True
+    data_source: str = ""
+    limitations: str = ""
 
 
 class FertilizerRecommendationIn(BaseModel):

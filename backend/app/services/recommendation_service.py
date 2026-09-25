@@ -52,6 +52,35 @@ def recommend_crop(
     return str(prediction[0])
 
 
+CROP_DATA_SOURCE = "Kaggle Crop Recommendation Dataset (via AgriLite-FL), India-oriented"
+CROP_LIMITATIONS = (
+    "Demo only — not validated for Zimbabwe. Missing sorghum, wheat, tobacco, "
+    "groundnuts and soybeans; needs a soil test for N/P/K and pH. Use alongside "
+    "the FAO crop calendar and an extension officer, not instead of them."
+)
+
+
+def crop_suggestions(
+    nitrogen: float,
+    phosphorous: float,
+    potassium: float,
+    ph: float,
+    rainfall: float,
+    temperature: float,
+    humidity: float,
+    top_n: int = 3,
+) -> list[tuple[str, float]]:
+    """Top-N crops with the model's class probability, highest first —
+    lets the app show alternatives and how sure the model is, not just
+    one bare answer."""
+    columns = ["N", "P", "K", "ph", "rainfall", "temperature", "humidity"]
+    row = [[nitrogen, phosphorous, potassium, ph, rainfall, temperature, humidity]]
+    model = _crop_model()
+    probs = model.predict_proba(pd.DataFrame(row, columns=columns))[0]
+    ranked = sorted(zip(model.classes_, probs), key=lambda p: p[1], reverse=True)[:top_n]
+    return [(str(c), round(float(p), 3)) for c, p in ranked]
+
+
 def recommend_fertilizer(crop: str, nitrogen: float, phosphorous: float, potassium: float) -> dict:
     df = _fertilizer_table()
     rows = df[df["Crop"].str.lower() == crop.lower()]

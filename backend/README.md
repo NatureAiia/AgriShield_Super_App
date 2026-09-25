@@ -44,6 +44,6 @@ pytest
 | POST | `/scans/diagnose` | Module 9 — server-side disease diagnosis from an uploaded leaf photo (returns a diagnosis only; sync it via `POST /scans` separately) |
 | GET | `/satellite/zones` | Part 3 district zone grid (mock unless GEE is configured) |
 | POST | `/alerts/send` | Foundation alert channel (mock unless Africa's Talking is configured) |
-| POST | `/recommendations/crop` | Module 9 — crop recommendation from soil N/P/K/pH + rainfall/temperature/humidity |
+| POST | `/recommendations/crop` | Module 9 — crop recommendation from soil N/P/K/pH + rainfall/temperature/humidity. Returns the top pick as `crop`, plus top-3 `suggestions` with confidence and `demo_only`/`data_source`/`limitations` flags (India-oriented training data, not validated for Zimbabwe) |
 | POST | `/recommendations/fertilizer` | Module 9 — fertilizer advice for a crop + soil N/P/K |
 | GET | `/health` | Liveness check |
