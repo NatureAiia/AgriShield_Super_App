@@ -9,6 +9,7 @@ import '../widgets/animated_count.dart';
 import '../widgets/app_card.dart';
 import '../widgets/coming_soon_carousel.dart';
 import '../widgets/incoming_call_overlay.dart';
+import 'farmer_story_screen.dart';
 import '../widgets/risk_badge.dart';
 import '../widgets/shimmer_box.dart';
 
@@ -54,10 +55,12 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _sendingAlert = false);
   }
 
+  // Shona first, English after — the farmer's own greeting, then the
+  // translation (Mangwanani / Masikati / Manheru).
   static String _greeting(DateTime now) {
-    if (now.hour < 12) return 'Good morning,';
-    if (now.hour < 17) return 'Good afternoon,';
-    return 'Good evening,';
+    if (now.hour < 12) return 'Mangwanani · Good morning,';
+    if (now.hour < 17) return 'Masikati · Good afternoon,';
+    return 'Manheru · Good evening,';
   }
 
   @override
@@ -84,6 +87,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     .fadeIn(delay: 60.ms, duration: 350.ms)
                     .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
                 const SizedBox(height: 16),
+                _DoThisNow(crop: widget.farmer.crop, reading: reading)
+                    .animate()
+                    .fadeIn(delay: 90.ms, duration: 400.ms)
+                    .slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
+                const SizedBox(height: 12),
                 _CoolerHero(crop: widget.farmer.crop, outside: outside, inside: reading)
                     .animate()
                     .fadeIn(delay: 120.ms, duration: 450.ms)
@@ -160,6 +168,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: Text(_sendingAlert ? 'Calling farmer…' : 'Call the farmer now'),
                   ),
                 ).animate().fadeIn(delay: 320.ms, duration: 400.ms).slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
+                const SizedBox(height: 12),
+                _StoryLink(
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FarmerStoryScreen())),
+                ).animate().fadeIn(delay: 380.ms, duration: 400.ms),
                 const SizedBox(height: 24),
                 const ComingSoonCarousel(),
                 const SizedBox(height: 8),
@@ -346,6 +358,121 @@ class _HeroBar extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+
+/// One plain sentence of advice from the live reading — the farmer reads
+/// what to do, not a number to interpret. Tone follows the same three mold
+/// tiers as the risk badge; PICS bag pricing is the roadmap's own sourced
+/// figure (docs/roadmap/V1_HACKATHON_DEMO.md, Part 1).
+class _DoThisNow extends StatelessWidget {
+  final String crop;
+  final StorageReading? reading;
+  const _DoThisNow({required this.crop, required this.reading});
+
+  @override
+  Widget build(BuildContext context) {
+    final r = reading;
+    final c = crop.toLowerCase();
+    final (Color dot, IconData icon, String title, String detail) = switch (r?.moldRisk) {
+      null => (AgriShieldStatus.low, Icons.hourglass_top_rounded, 'Checking your store…', 'The first reading is on its way.'),
+      MoldRisk.high => (
+          AgriShieldStatus.high,
+          Icons.priority_high_rounded,
+          'Act today: move your $c',
+          'Put it into a sealed PICS bag (about \$2–3), or somewhere cooler and drier, to stop mold.',
+        ),
+      MoldRisk.moderate => (
+          AgriShieldStatus.moderate,
+          Icons.visibility_rounded,
+          'Check your $c today',
+          'It is getting warm or damp. If it gets worse, we will call you straight away.',
+        ),
+      MoldRisk.low => (
+          AgriShieldStatus.low,
+          Icons.check_rounded,
+          'Your $c is safe',
+          'Nothing to do right now. We will warn you if that changes.',
+        ),
+    };
+    final textColor = AgriShieldStatus.text(dot, context.isDark);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(dot.withValues(alpha: context.isDark ? 0.22 : 0.14), context.colors.surface),
+        borderRadius: BorderRadius.circular(AgriShieldRadii.card),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+            child: Icon(icon, color: Colors.white, size: 22),
+          )
+              .animate(key: ValueKey(title), onPlay: (c) => c.repeat(reverse: true))
+              .scaleXY(begin: 1, end: 1.08, duration: 900.ms, curve: Curves.easeInOut),
+          const SizedBox(width: 12),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: Column(
+                key: ValueKey(title),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('WHAT TO DO NOW', style: context.text.labelSmall?.copyWith(color: textColor)),
+                  const SizedBox(height: 2),
+                  Text(title, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: textColor)),
+                  const SizedBox(height: 2),
+                  Text(detail, style: TextStyle(fontSize: 13, height: 1.35, color: textColor)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StoryLink extends StatelessWidget {
+  final VoidCallback onTap;
+  const _StoryLink({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AgriShieldRadii.card),
+      child: Ink(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          borderRadius: BorderRadius.circular(AgriShieldRadii.card),
+          border: Border.all(color: context.colors.outline),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.play_circle_fill_rounded, size: 34, color: context.colors.secondary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('How AgriShield helps you', style: TextStyle(fontWeight: FontWeight.w800, color: context.colors.onSurface)),
+                  Text('Easier, cheaper, and on any phone — in 4 short pages',
+                      style: TextStyle(fontSize: 12, color: context.colors.onSurface.withValues(alpha: 0.65))),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: context.colors.onSurface.withValues(alpha: 0.5)),
+          ],
+        ),
+      ),
     );
   }
 }

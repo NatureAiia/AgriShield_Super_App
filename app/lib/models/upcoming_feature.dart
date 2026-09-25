@@ -71,6 +71,23 @@ const upcomingFeatures = [
     preview: FeaturePreview.prices,
   ),
   UpcomingFeature(
+    id: 'language',
+    version: 'V2',
+    title: 'Your language',
+    tagline: 'Messages in Shona and Ndebele',
+    description:
+        'Every warning, SMS and voice call in the language you speak at home — not only English.',
+    highlights: [
+      'Shona first, then Ndebele',
+      'Voice calls read out in your language',
+      'Choose your language once, on sign-up',
+    ],
+    needsFirst: 'Every message must be checked by native speakers before it reaches a farmer.',
+    icon: Icons.translate_rounded,
+    gradient: [Color(0xFF831843), Color(0xFFEC4899)],
+    preview: FeaturePreview.message,
+  ),
+  UpcomingFeature(
     id: 'score',
     version: 'V2',
     title: 'AgriShield Score',
@@ -143,6 +160,7 @@ const upcomingFeatures = [
 /// Sample message each message-style preview "receives" — shown under a
 /// "Preview — sample" label, never as a real notification.
 const previewMessages = {
+  'language': 'Mangwanani, Tendai! (Shona) · Livukile, Tendai! (Ndebele) — your morning check is ready.',
   'insurance': 'Drought detected in your district by satellite. Your cover has paid out to your mobile money.',
   'market': 'Good news! Your maize in storage has a buyer nearby. Reply 1 to get their name and number.',
   'coldroom': 'Your cold-room slot at Mbare Collection Point is booked for 3 crates, from tomorrow.',

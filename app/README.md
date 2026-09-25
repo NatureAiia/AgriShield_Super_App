@@ -43,6 +43,16 @@ Motion and a clearly-labelled roadmap showcase, layered on the same real V1 sign
 - **What's coming next** — a swipeable row of gradient cards for six V2/V3 features (weather alerts, market prices, AgriShield Score, drought cover, buyer connect, solar cold room), each badged SOON. Tapping one flies it (Hero) into a detail page: plain-language description, an animated preview marked **Sample data**, highlights, a **"Before it ships:"** line naming what it still needs (e.g. "Needs an insurance underwriter partner — none is confirmed yet"), and a "Notify me" toggle remembered on the phone. Content lives in `lib/models/upcoming_feature.dart`; `test/coming_soon_test.dart` checks every feature carries its SOON label, sample-data label and caveat.
 - Six nav labels now always fit on one line (the longest, "Recommend", used to wrap).
 
+## Farmer-first story
+
+Plain-language answers to what a farmer actually asks — does it look after my harvest, is it easier, is it cheaper, can I use it on my phone — with no tech words:
+
+- **"How AgriShield helps you"** (`lib/screens/farmer_story_screen.dart`) — four swipeable, animated pages, one per question. The money page lists only the project's own sourced figures (free SMS/voice warnings, ~\$1 zeer cooler, ~\$2–3 PICS bag) and says plainly the sensor's seasonal rental price is still being set with local suppliers. Opens from the landing screen, from Home, and from Profile.
+- **"What to do now"** card at the top of Home — one plain sentence from the live reading ("Your maize is safe" / "Check your maize today" / "Act today: move your maize into a sealed PICS bag"), colour-coded like the mold-risk badge.
+- **Shona greeting** — Mangwanani / Masikati / Manheru before the English one.
+- **"Your language"** joins the coming-soon row: Shona and Ndebele SMS/voice, flagged as needing native-speaker checks before any message reaches a farmer.
+- Landing tagline is now "Keep your harvest safe — on any phone, even with no signal."
+
 ## Dark / light mode
 
 `lib/theme.dart` builds real, separate `ColorScheme`s for light and dark (not a single palette with opacity tweaks) — every screen reads colors via a `context.colors`/`context.text` extension rather than a static constant, so the toggle actually changes what's on screen everywhere, not just the app bar. A sun/moon/auto icon in the app bar cycles System → Light → Dark, persisted locally via `ThemeController` (`lib/services/theme_controller.dart`) so the choice survives a restart.

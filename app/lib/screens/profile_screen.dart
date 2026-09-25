@@ -4,6 +4,7 @@ import '../models/farmer.dart';
 import '../repositories/farmer_repository.dart';
 import '../theme.dart';
 import '../widgets/app_card.dart';
+import 'farmer_story_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final Farmer farmer;
@@ -126,6 +127,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FarmerStoryScreen())),
+            icon: const Icon(Icons.play_circle_outline_rounded),
+            label: const Text('How AgriShield helps you'),
+          ),
+        ).animate().fadeIn(delay: 250.ms, duration: 350.ms),
+        const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
