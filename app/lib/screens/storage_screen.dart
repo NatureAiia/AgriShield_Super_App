@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../models/storage_reading.dart';
 import '../services/sensor_service.dart';
 import '../theme.dart';
+import '../widgets/animated_count.dart';
 import '../widgets/app_card.dart';
 
 /// The Part 1 demo screen — built around the vision doc's own "Moment 1"
@@ -29,9 +31,19 @@ class StorageScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Expanded(child: _SensorCard(label: 'OUTSIDE COOLER', reading: outside)),
+                    Expanded(
+                      child: _SensorCard(label: 'OUTSIDE COOLER', reading: outside)
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .slideX(begin: -0.1, end: 0, curve: Curves.easeOutCubic),
+                    ),
                     const SizedBox(width: 12),
-                    Expanded(child: _SensorCard(label: 'INSIDE ZEER COOLER', reading: inside, highlight: true)),
+                    Expanded(
+                      child: _SensorCard(label: 'INSIDE ZEER COOLER', reading: inside, highlight: true)
+                          .animate()
+                          .fadeIn(delay: 100.ms, duration: 400.ms)
+                          .slideX(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
+                    ),
                   ],
                 ),
                 AnimatedSize(
@@ -68,12 +80,15 @@ class StorageScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('CO2 (INSIDE)', style: context.text.labelSmall),
-                              Text('${inside.co2Ppm.toStringAsFixed(0)} ppm',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                    color: inside.co2High ? context.colors.error : context.colors.onSurface,
-                                  )),
+                              AnimatedCount(
+                                value: inside.co2Ppm,
+                                format: (v) => '${v.toStringAsFixed(0)} ppm',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: inside.co2High ? context.colors.error : context.colors.onSurface,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -134,17 +149,25 @@ class _SensorCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: highlight ? onHighlight.withOpacity(0.75) : context.colors.onSurface.withOpacity(0.6),
+                color: highlight ? onHighlight.withValues(alpha: 0.75) : context.colors.onSurface.withValues(alpha: 0.6),
               )),
           const SizedBox(height: 4),
-          Text(
-            reading == null ? '—' : '${reading!.temperatureC.toStringAsFixed(0)}°C',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: highlight ? onHighlight : context.colors.onSurface),
-          ),
-          Text(
-            reading == null ? '' : '${reading!.humidityPercent.toStringAsFixed(0)}% humidity',
-            style: TextStyle(fontSize: 12, color: highlight ? onHighlight.withOpacity(0.75) : context.colors.onSurface.withOpacity(0.6)),
-          ),
+          reading == null
+              ? Text(
+                  '—',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: highlight ? onHighlight : context.colors.onSurface),
+                )
+              : AnimatedCount(
+                  value: reading!.temperatureC,
+                  format: (v) => '${v.toStringAsFixed(0)}°C',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: highlight ? onHighlight : context.colors.onSurface),
+                ),
+          if (reading != null)
+            AnimatedCount(
+              value: reading!.humidityPercent,
+              format: (v) => '${v.toStringAsFixed(0)}% humidity',
+              style: TextStyle(fontSize: 12, color: highlight ? onHighlight.withValues(alpha: 0.75) : context.colors.onSurface.withValues(alpha: 0.6)),
+            ),
         ],
       ),
     );

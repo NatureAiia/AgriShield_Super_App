@@ -13,7 +13,10 @@ app = FastAPI(
         "Part 1 storage sync + Part 2 disease-scan sync + Part 3 "
         "satellite zones + the one Africa's Talking alert channel. "
         "Satellite and alerts run in mock mode until GEE / Africa's "
-        "Talking credentials are configured — see .env.example."
+        "Talking credentials are configured — see .env.example. Also "
+        "carries V2's crop/fertilizer recommendation and server-side "
+        "disease diagnosis (docs/roadmap/V2_INTELLIGENCE_LAYER.md), "
+        "ported from AgriLite-FL (GPLv3)."
     ),
     version="0.1.0",
 )

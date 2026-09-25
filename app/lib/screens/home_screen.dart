@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../models/farmer.dart';
 import '../models/storage_reading.dart';
 import '../services/messaging_service.dart';
 import '../services/sensor_service.dart';
 import '../theme.dart';
+import '../widgets/animated_count.dart';
 import '../widgets/app_card.dart';
 import '../widgets/risk_badge.dart';
 import '../widgets/shimmer_box.dart';
@@ -69,8 +71,14 @@ class _HomeScreenState extends State<HomeScreen> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Text('Good morning,', style: TextStyle(color: context.colors.secondary, fontSize: 14)),
-                Text(widget.farmer.name, style: context.text.headlineSmall),
+                Text('Good morning,', style: TextStyle(color: context.colors.secondary, fontSize: 14))
+                    .animate()
+                    .fadeIn(duration: 350.ms)
+                    .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
+                Text(widget.farmer.name, style: context.text.headlineSmall)
+                    .animate()
+                    .fadeIn(delay: 60.ms, duration: 350.ms)
+                    .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
                 const SizedBox(height: 16),
                 GridView.count(
                   crossAxisCount: 2,
@@ -83,27 +91,49 @@ class _HomeScreenState extends State<HomeScreen> {
                     _BentoTile(
                       icon: Icons.eco,
                       label: 'SHELF LIFE — ${widget.farmer.crop.toUpperCase()}',
-                      value: reading == null ? null : '${reading.estimatedShelfLifeHours.toStringAsFixed(0)}h',
+                      valueWidget: reading == null
+                          ? null
+                          : AnimatedCount(
+                              value: reading.estimatedShelfLifeHours,
+                              format: (v) => '${v.toStringAsFixed(0)}h',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.colors.onSurface),
+                            ),
                       accent: context.colors.secondary,
-                    ),
+                    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
                     _BentoTile(
                       icon: Icons.warning_amber_rounded,
                       label: 'MOLD RISK',
                       valueWidget: reading == null ? null : RiskBadge(key: ValueKey(reading.moldRisk), risk: reading.moldRisk),
                       accent: context.colors.error,
-                    ),
+                    ).animate().fadeIn(delay: 80.ms, duration: 400.ms).slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
                     _BentoTile(
                       icon: Icons.air,
                       label: 'CO2 (INSIDE)',
-                      value: reading == null ? null : '${reading.co2Ppm.toStringAsFixed(0)} ppm',
+                      valueWidget: reading == null
+                          ? null
+                          : AnimatedCount(
+                              value: reading.co2Ppm,
+                              format: (v) => '${v.toStringAsFixed(0)} ppm',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: reading.co2High ? context.colors.error : context.colors.onSurface,
+                              ),
+                            ),
                       accent: reading?.co2High == true ? context.colors.error : context.colors.secondary,
-                    ),
+                    ).animate().fadeIn(delay: 160.ms, duration: 400.ms).slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
                     _BentoTile(
                       icon: Icons.water_drop,
                       label: 'COOLER EFFECT',
-                      value: gap == null ? null : '-${gap.toStringAsFixed(1)}°C',
+                      valueWidget: gap == null
+                          ? null
+                          : AnimatedCount(
+                              value: gap,
+                              format: (v) => '-${v.toStringAsFixed(1)}°C',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.colors.onSurface),
+                            ),
                       accent: context.colors.secondary,
-                    ),
+                    ).animate().fadeIn(delay: 240.ms, duration: 400.ms).slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -120,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         : const Icon(Icons.phone_forwarded),
                     label: Text(_sendingAlert ? 'Calling farmer…' : 'Trigger farmer alert now'),
                   ),
-                ),
+                ).animate().fadeIn(delay: 320.ms, duration: 400.ms).slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
               ],
             );
           },
@@ -133,7 +163,6 @@ class _HomeScreenState extends State<HomeScreen> {
 class _BentoTile extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String? value;
   final Widget? valueWidget;
   final Color accent;
 
@@ -141,7 +170,6 @@ class _BentoTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.accent,
-    this.value,
     this.valueWidget,
   });
 
@@ -162,13 +190,7 @@ class _BentoTile extends StatelessWidget {
               child: SlideTransition(position: Tween(begin: const Offset(0, 0.15), end: Offset.zero).animate(animation), child: child),
             ),
             child: valueWidget ??
-                (value == null
-                    ? ShimmerBox(key: const ValueKey('loading'), width: 56, height: 22, borderRadius: BorderRadius.circular(4))
-                    : Text(
-                        value!,
-                        key: ValueKey(value),
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.colors.onSurface),
-                      )),
+                ShimmerBox(key: const ValueKey('loading'), width: 56, height: 22, borderRadius: BorderRadius.circular(4)),
           ),
         ],
       ),

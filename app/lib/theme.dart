@@ -84,7 +84,7 @@ ThemeData _buildTheme(Brightness brightness) {
         labelSmall: baseText.labelSmall?.copyWith(
           fontWeight: FontWeight.w700,
           letterSpacing: 0.4,
-          color: colorScheme.onSurface.withOpacity(0.6),
+          color: colorScheme.onSurface.withValues(alpha: 0.6),
         ),
       )
       .apply(fontSizeFactor: 1.0);
@@ -98,24 +98,9 @@ ThemeData _buildTheme(Brightness brightness) {
     appBarTheme: AppBarTheme(
       backgroundColor: colorScheme.primary,
       foregroundColor: colorScheme.onPrimary,
-      elevation: 0,
+      elevation: isDark ? 0 : 2,
+      shadowColor: Colors.black.withValues(alpha: 0.18),
       centerTitle: false,
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: colorScheme.surface,
-      indicatorColor: colorScheme.primary.withOpacity(0.16),
-      labelTextStyle: WidgetStateProperty.resolveWith(
-        (states) => TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: states.contains(WidgetState.selected) ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.6),
-        ),
-      ),
-      iconTheme: WidgetStateProperty.resolveWith(
-        (states) => IconThemeData(
-          color: states.contains(WidgetState.selected) ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.6),
-        ),
-      ),
     ),
     cardTheme: CardThemeData(
       color: colorScheme.surface,
@@ -124,7 +109,8 @@ ThemeData _buildTheme(Brightness brightness) {
         borderRadius: BorderRadius.circular(AgriShieldRadii.card),
         side: BorderSide(color: colorScheme.outline),
       ),
-      elevation: 0,
+      elevation: 1,
+      shadowColor: Colors.black.withValues(alpha: isDark ? 0.5 : 0.06),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(

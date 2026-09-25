@@ -22,7 +22,13 @@ def test_health():
 def test_v1_flow():
     r = client.post(
         "/farmers",
-        json={"name": "Tendai Moyo", "location": "Harare South", "crop": "Maize", "storage_hub": "Mbare Collection Point"},
+        json={
+            "phone": "+263771234567",
+            "name": "Tendai Moyo",
+            "location": "Harare South",
+            "crop": "Maize",
+            "storage_hub": "Mbare Collection Point",
+        },
     )
     assert r.status_code == 200
     farmer = r.json()
@@ -52,7 +58,34 @@ def test_v1_flow():
 
     r = client.post(
         "/alerts/send",
-        json={"farmer": {k: farmer[k] for k in ("name", "location", "crop", "storage_hub")}, "message": "14 hours left"},
+        json={"farmer": {k: farmer[k] for k in ("phone", "name", "location", "crop", "storage_hub")}, "message": "14 hours left"},
     )
     assert r.status_code == 200
     assert r.json()["sent"] is True
+
+
+def test_phone_sign_up_and_sign_in():
+    phone = "+263779998888"
+
+    # No account yet for this phone.
+    r = client.get(f"/farmers/by-phone/{phone}")
+    assert r.status_code == 404
+
+    # Sign up.
+    r = client.post(
+        "/farmers",
+        json={"phone": phone, "name": "Rudo Chikafu", "location": "Bulawayo", "crop": "Sorghum", "storage_hub": "Bulawayo Depot"},
+    )
+    assert r.status_code == 200
+
+    # A second sign-up for the same phone is rejected.
+    r = client.post(
+        "/farmers",
+        json={"phone": phone, "name": "Someone Else", "location": "X", "crop": "Y", "storage_hub": "Z"},
+    )
+    assert r.status_code == 409
+
+    # Signing in with that phone returns the existing farmer.
+    r = client.get(f"/farmers/by-phone/{phone}")
+    assert r.status_code == 200
+    assert r.json()["name"] == "Rudo Chikafu"

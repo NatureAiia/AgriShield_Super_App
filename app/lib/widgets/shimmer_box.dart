@@ -29,7 +29,7 @@ class _ShimmerBoxState extends State<ShimmerBox> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final base = context.colors.outline;
-    final highlight = context.colors.onSurface.withOpacity(0.06);
+    final highlight = context.colors.onSurface.withValues(alpha: 0.06);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -44,7 +44,7 @@ class _ShimmerBoxState extends State<ShimmerBox> with SingleTickerProviderStateM
               gradient: LinearGradient(
                 begin: Alignment(-1.5 + 3 * t, 0),
                 end: Alignment(-0.5 + 3 * t, 0),
-                colors: [base.withOpacity(0.35), highlight, base.withOpacity(0.35)],
+                colors: [base.withValues(alpha: 0.35), highlight, base.withValues(alpha: 0.35)],
               ),
             ),
           ),

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../models/disease_result.dart';
 import '../services/disease_service.dart';
 import '../theme.dart';
@@ -48,12 +49,23 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
           ),
           child: Center(
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 220),
               child: _scanning
-                  ? Text(
-                      'Checking leaf photo…',
+                  ? Column(
                       key: const ValueKey('scanning'),
-                      style: TextStyle(color: context.colors.secondary, fontWeight: FontWeight.w700),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 64,
+                          height: 64,
+                          child: CircularProgressIndicator(strokeWidth: 3, color: context.colors.secondary),
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          'Checking leaf photo…',
+                          style: TextStyle(color: context.colors.secondary, fontWeight: FontWeight.w700),
+                        ),
+                      ],
                     )
                   : Pressable(
                       key: const ValueKey('idle'),
@@ -65,7 +77,9 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
                             padding: const EdgeInsets.all(22),
                             decoration: BoxDecoration(color: context.colors.primary, shape: BoxShape.circle),
                             child: Icon(Icons.camera_alt, color: context.colors.onPrimary, size: 36),
-                          ),
+                          )
+                              .animate(onPlay: (c) => c.repeat(reverse: true))
+                              .scaleXY(begin: 1.0, end: 1.05, duration: 1200.ms, curve: Curves.easeInOut),
                           const SizedBox(height: 10),
                           Text('Tap to photograph a leaf',
                               style: TextStyle(color: context.colors.onSurface, fontWeight: FontWeight.w800)),
@@ -92,8 +106,12 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
                         const SizedBox(height: 6),
                         Text(
                           '${_result!.confidenceLabel} — first opinion, not a final answer.',
-                          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: context.colors.onSurface.withOpacity(0.6)),
+                          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: context.colors.onSurface.withValues(alpha: 0.6)),
                         ),
+                        if (_result!.advice != null) ...[
+                          const SizedBox(height: 10),
+                          Text(_result!.advice!, style: TextStyle(color: context.colors.onSurface)),
+                        ],
                         const SizedBox(height: 14),
                         SizedBox(
                           width: double.infinity,
@@ -106,7 +124,7 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
                         ),
                       ],
                     ),
-                  ),
+                  ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
                 ),
         ),
       ],

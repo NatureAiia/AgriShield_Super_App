@@ -1,10 +1,11 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class FarmerIn(BaseModel):
+    phone: str
     name: str
     location: str
     crop: str
@@ -30,16 +31,68 @@ class StorageReadingOut(StorageReadingIn):
     taken_at: datetime
 
 
+class DiseaseScanSource(str, Enum):
+    on_device = "on_device"
+    server = "server"
+
+
 class DiseaseScanIn(BaseModel):
     farmer_id: str
     likely_issue: str
     confidence: float
+    source: DiseaseScanSource = DiseaseScanSource.on_device
 
 
 class DiseaseScanOut(DiseaseScanIn):
     model_config = ConfigDict(from_attributes=True)
     id: str
     scanned_at: datetime
+
+
+class DiseaseDiagnosisOut(BaseModel):
+    """Response for the synchronous server-side diagnosis endpoint —
+    distinct from DiseaseScanOut, which is the logged/synced record."""
+
+    likely_issue: str
+    advice: str
+
+
+class CropRecommendationIn(BaseModel):
+    nitrogen: float
+    phosphorous: float
+    potassium: float
+    ph: float
+    rainfall: float
+    temperature: float
+    humidity: float
+
+
+class CropSuggestion(BaseModel):
+    crop: str
+    confidence: float
+
+
+class CropRecommendationOut(BaseModel):
+    """`crop` is the top pick (the field the app already reads); the
+    rest is additive — ranked alternatives plus honesty flags."""
+    crop: str
+    suggestions: list[CropSuggestion] = []
+    demo_only: bool = True
+    data_source: str = ""
+    limitations: str = ""
+
+
+class FertilizerRecommendationIn(BaseModel):
+    crop: str
+    nitrogen: float
+    phosphorous: float
+    potassium: float
+
+
+class FertilizerRecommendationOut(BaseModel):
+    nutrient: str
+    direction: str
+    advice: str
 
 
 class ZoneStatus(str, Enum):
@@ -63,27 +116,3 @@ class AlertResult(BaseModel):
     sent: bool
     channel: str
     detail: str
-
-
-class CropRecommendationIn(BaseModel):
-    """Soil values need a soil test (N/P/K on the dataset's own scale, pH);
-    climate values can come from Module 4 weather / Part 3 satellite."""
-    nitrogen: float = Field(ge=0, le=200)
-    phosphorus: float = Field(ge=0, le=200)
-    potassium: float = Field(ge=0, le=250)
-    temperature_c: float = Field(ge=-10, le=55)
-    humidity_percent: float = Field(ge=0, le=100)
-    ph: float = Field(ge=0, le=14)
-    rainfall_mm: float = Field(ge=0, le=500)
-
-
-class CropSuggestion(BaseModel):
-    crop: str
-    confidence: float
-
-
-class CropRecommendationOut(BaseModel):
-    suggestions: list[CropSuggestion]
-    demo_only: bool = True
-    data_source: str
-    limitations: str

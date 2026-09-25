@@ -4,4 +4,22 @@ sqlalchemy==2.0.35
 pydantic==2.9.2
 pydantic-settings==2.5.2
 python-dotenv==1.0.1
-scikit-learn==1.5.2
+python-multipart==0.0.32
+
+# Postgres driver for DATABASE_URL pointing at Supabase (see backend/README.md).
+# pg8000 specifically (pure Python, not psycopg2) because this dev machine's
+# Windows Defender Application Control policy blocks psycopg2's compiled
+# _psycopg.pyd outright — pg8000 has no compiled extension to block.
+pg8000==1.31.5
+
+# Crop/fertilizer recommendation + server-side disease diagnosis (V2
+# module ported from AgriLite-FL, GPLv3 — see
+# docs/roadmap/V2_INTELLIGENCE_LAYER.md). The disease model runs as
+# TFLite (converted from AgriLite-FL's original PyTorch checkpoint via
+# ONNX/onnx2tf — see backend/scripts/convert_to_tflite.py) specifically
+# to avoid a torch/torchvision runtime dependency here.
+scikit-learn==1.9.1
+pandas==3.0.6
+numpy==2.5.3
+ai-edge-litert==2.1.2
+pillow==12.3.0

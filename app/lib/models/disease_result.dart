@@ -6,11 +6,13 @@ class DiseaseResult {
   final String likelyIssue;
   final double confidence; // 0.0–1.0
   final bool isFirstOpinionOnly;
+  final String? advice;
 
   const DiseaseResult({
     required this.likelyIssue,
     required this.confidence,
     this.isFirstOpinionOnly = true,
+    this.advice,
   });
 
   String get confidenceLabel {
