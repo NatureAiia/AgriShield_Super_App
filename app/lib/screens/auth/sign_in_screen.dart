@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../repositories/farmer_repository.dart';
 import '../../services/auth_service.dart';
 import '../../theme.dart';
-import 'otp_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   final AuthService authService;
@@ -17,6 +17,8 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final _phoneController = TextEditingController();
+  bool _signingIn = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -24,18 +26,31 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  bool get _canContinue => _phoneController.text.trim().length >= 9;
+  bool get _canContinue => _phoneController.text.trim().length >= 9 && !_signingIn;
 
-  void _continue() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OtpScreen(
-          authService: widget.authService,
-          phone: _phoneController.text.trim(),
-          onAuthenticated: widget.onAuthenticated,
-        ),
-      ),
-    );
+  Future<void> _signIn() async {
+    setState(() {
+      _signingIn = true;
+      _errorMessage = null;
+    });
+    try {
+      final farmer = await widget.authService.signIn(phone: _phoneController.text.trim());
+      await FarmerRepository().save(farmer);
+      if (!mounted) return;
+      widget.onAuthenticated();
+    } on NoAccountFound {
+      if (!mounted) return;
+      setState(() {
+        _signingIn = false;
+        _errorMessage = 'No account found for this number — go back and use "Get started" instead.';
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _signingIn = false;
+        _errorMessage = 'Could not reach the server — check your connection and try again.';
+      });
+    }
   }
 
   @override
@@ -73,10 +88,24 @@ class _SignInScreenState extends State<SignInScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _canContinue ? _continue : null,
-                child: const Text('Send code'),
+                onPressed: _canContinue ? _signIn : null,
+                child: _signingIn
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onSecondary),
+                      )
+                    : const Text('Sign in'),
               ),
             ).animate().fadeIn(delay: 200.ms, duration: 350.ms),
+            if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  _errorMessage!,
+                  style: TextStyle(color: context.colors.error, fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+              ).animate().fadeIn(duration: 200.ms),
           ],
         ),
       ),

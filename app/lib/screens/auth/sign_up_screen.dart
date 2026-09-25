@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/farmer.dart';
+import '../../repositories/farmer_repository.dart';
 import '../../services/auth_service.dart';
 import '../../theme.dart';
-import 'otp_screen.dart';
 
 /// Collects the same Foundation farmer record fields
 /// (docs/roadmap/README.md) that Profile lets you edit later — name, rough
-/// location, crop, storage hub — plus the phone number the OTP goes to.
+/// location, crop, storage hub — plus the phone number that identifies the
+/// account. One tap creates it server-side via POST /farmers; no code step.
 class SignUpScreen extends StatefulWidget {
   final AuthService authService;
   final VoidCallback onAuthenticated;
@@ -39,9 +40,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _name.text.trim().isNotEmpty &&
       _location.text.trim().isNotEmpty &&
       _crop.text.trim().isNotEmpty &&
-      _storageHub.text.trim().isNotEmpty;
+      _storageHub.text.trim().isNotEmpty &&
+      !_creating;
 
-  void _continue() {
+  bool _creating = false;
+  String? _errorMessage;
+
+  Future<void> _createAccount() async {
+    setState(() {
+      _creating = true;
+      _errorMessage = null;
+    });
     final draft = Farmer(
       phone: _phone.text.trim(),
       name: _name.text.trim(),
@@ -49,16 +58,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
       crop: _crop.text.trim(),
       storageHub: _storageHub.text.trim(),
     );
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OtpScreen(
-          authService: widget.authService,
-          phone: _phone.text.trim(),
-          farmerDraft: draft,
-          onAuthenticated: widget.onAuthenticated,
-        ),
-      ),
-    );
+    try {
+      final farmer = await widget.authService.signUp(draft: draft);
+      await FarmerRepository().save(farmer);
+      if (!mounted) return;
+      widget.onAuthenticated();
+    } on PhoneAlreadyRegistered {
+      if (!mounted) return;
+      setState(() {
+        _creating = false;
+        _errorMessage = 'That number already has an account — go back and sign in instead.';
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _creating = false;
+        _errorMessage = 'Could not reach the server — check your connection and try again.';
+      });
+    }
   }
 
   Widget _field(TextEditingController c, String label, IconData icon, {TextInputType? type, List<TextInputFormatter>? formatters}) {
@@ -103,10 +120,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _canContinue ? _continue : null,
-              child: const Text('Send code'),
+              onPressed: _canContinue ? _createAccount : null,
+              child: _creating
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onSecondary),
+                    )
+                  : const Text('Create account'),
             ),
           ).animate().fadeIn(delay: 480.ms, duration: 350.ms),
+          if (_errorMessage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                _errorMessage!,
+                style: TextStyle(color: context.colors.error, fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+            ).animate().fadeIn(duration: 200.ms),
           const SizedBox(height: 24),
         ],
       ),

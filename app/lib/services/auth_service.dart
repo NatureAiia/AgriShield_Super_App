@@ -1,40 +1,47 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/farmer.dart';
 import 'api_config.dart';
 
-/// Foundation — phone-number + OTP sign-in, the standard pattern for this
-/// demographic and one that reuses the Africa's Talking SMS channel the
-/// roadmap already commits to for alerts, rather than introducing a new
-/// one. No SMS credentials exist yet (same gap as MessagingService), so
-/// neither implementation here can actually send a text — both return the
-/// generated code directly so the UI can show it on-screen as a labeled
-/// demo code instead of pretending to send it.
+/// Foundation — phone-number sign-in with no password or code, matching the
+/// backend (`POST /farmers`, `GET /farmers/by-phone/{phone}`).
+/// A deliberate demo-scope tradeoff for a one-step, low-friction flow on
+/// shared/low-literacy devices — not a production auth story (see Farmer's
+/// docstring in backend/app/models.py). The previous OTP-over-SMS step was
+/// removed in V1 finalization: no Africa's Talking SMS account exists, so
+/// the "demo code on screen" proved nothing and added a full screen of
+/// friction before a judge ever saw the storage cooler working.
 abstract class AuthService {
   Future<bool> isSignedIn();
-  Future<String> requestOtp(String phone);
-  Future<OtpVerifyResult> verifyOtp(String phone, String code);
-  Future<Farmer> completeSignUp({required String phone, required Farmer draft});
+  Future<Farmer> signUp({required Farmer draft});
+  Future<Farmer> signIn({required String phone});
   Future<void> signOut();
 }
 
-/// Result of a code check: [codeValid] is whether the code matched;
-/// [farmer] is the existing account for that phone, if any — present on a
-/// returning sign-in, absent for a number that hasn't signed up yet
-/// (the caller then completes sign-up via [AuthService.completeSignUp]).
-class OtpVerifyResult {
-  final bool codeValid;
-  final Farmer? farmer;
-  const OtpVerifyResult({required this.codeValid, this.farmer});
+/// Thrown by [AuthService.signIn] when no account exists for the number —
+/// the caller should point the farmer at sign-up instead.
+class NoAccountFound implements Exception {
+  final String phone;
+  const NoAccountFound(this.phone);
+  @override
+  String toString() => 'No account found for $phone';
+}
+
+/// Thrown by [AuthService.signUp] when the number already has an account —
+/// the caller should point the farmer at sign-in instead.
+class PhoneAlreadyRegistered implements Exception {
+  final String phone;
+  const PhoneAlreadyRegistered(this.phone);
+  @override
+  String toString() => 'An account already exists for $phone';
 }
 
 const _signedInKey = 'agrishield_signed_in_phone_v1';
 
-/// Calls the real backend (backend/app/routers/auth.py) so sign-up/sign-in
-/// persist server-side in Postgres and sync across devices/reinstalls,
-/// instead of MockAuthService's local-only, single-device version.
+/// Calls the real backend so sign-up/sign-in persist server-side in
+/// Postgres and sync across devices/reinstalls, instead of
+/// MockAuthService's local-only, single-device version.
 class HttpAuthService implements AuthService {
   @override
   Future<bool> isSignedIn() async {
@@ -43,54 +50,37 @@ class HttpAuthService implements AuthService {
   }
 
   @override
-  Future<String> requestOtp(String phone) async {
-    final response = await http
-        .post(
-          Uri.parse('${ApiConfig.baseUrl}/auth/request-otp'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'phone': phone}),
-        )
-        .timeout(const Duration(seconds: 10));
-    if (response.statusCode != 200) {
-      throw Exception('Could not request a code (${response.statusCode})');
-    }
-    return (jsonDecode(response.body) as Map<String, dynamic>)['code'] as String;
-  }
-
-  @override
-  Future<OtpVerifyResult> verifyOtp(String phone, String code) async {
-    final response = await http
-        .post(
-          Uri.parse('${ApiConfig.baseUrl}/auth/verify-otp'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'phone': phone, 'code': code}),
-        )
-        .timeout(const Duration(seconds: 10));
-    if (response.statusCode == 400) return const OtpVerifyResult(codeValid: false);
-    if (response.statusCode != 200) {
-      throw Exception('Could not verify the code (${response.statusCode})');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    final farmerJson = data['farmer'] as Map<String, dynamic>?;
-    final result = OtpVerifyResult(codeValid: true, farmer: farmerJson == null ? null : Farmer.fromJson(farmerJson));
-    if (result.farmer != null) await _markSignedIn(phone);
-    return result;
-  }
-
-  @override
-  Future<Farmer> completeSignUp({required String phone, required Farmer draft}) async {
+  Future<Farmer> signUp({required Farmer draft}) async {
     final response = await http
         .post(
           Uri.parse('${ApiConfig.baseUrl}/farmers'),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(draft.copyWith(phone: phone).toJson()),
+          body: jsonEncode(draft.toJson()),
         )
         .timeout(const Duration(seconds: 10));
+    if (response.statusCode == 409) {
+      throw PhoneAlreadyRegistered(draft.phone);
+    }
     if (response.statusCode != 200) {
       throw Exception('Could not create the account (${response.statusCode})');
     }
-    await _markSignedIn(phone);
-    return Farmer.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    final farmer = Farmer.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    await _markSignedIn(farmer.phone);
+    return farmer;
+  }
+
+  @override
+  Future<Farmer> signIn({required String phone}) async {
+    final response = await http
+        .get(Uri.parse('${ApiConfig.baseUrl}/farmers/by-phone/$phone'))
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode == 404) throw NoAccountFound(phone);
+    if (response.statusCode != 200) {
+      throw Exception('Could not sign in (${response.statusCode})');
+    }
+    final farmer = Farmer.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    await _markSignedIn(farmer.phone);
+    return farmer;
   }
 
   @override
@@ -108,8 +98,6 @@ class HttpAuthService implements AuthService {
 /// Local-only reference implementation — no backend round trip at all.
 /// Kept for offline development; not wired into main.dart by default.
 class MockAuthService implements AuthService {
-  final Random _random = Random();
-  String? _pendingCode;
   final Map<String, Farmer> _accounts = {};
 
   @override
@@ -119,29 +107,22 @@ class MockAuthService implements AuthService {
   }
 
   @override
-  Future<String> requestOtp(String phone) async {
-    await Future.delayed(const Duration(milliseconds: 700));
-    _pendingCode = (1000 + _random.nextInt(9000)).toString();
-    return _pendingCode!;
-  }
-
-  @override
-  Future<OtpVerifyResult> verifyOtp(String phone, String code) async {
+  Future<Farmer> signUp({required Farmer draft}) async {
     await Future.delayed(const Duration(milliseconds: 500));
-    if (code != _pendingCode) return const OtpVerifyResult(codeValid: false);
-    _pendingCode = null;
-    final farmer = _accounts[phone];
-    if (farmer != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_signedInKey, phone);
+    if (_accounts.containsKey(draft.phone)) {
+      throw PhoneAlreadyRegistered(draft.phone);
     }
-    return OtpVerifyResult(codeValid: true, farmer: farmer);
+    _accounts[draft.phone] = draft;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_signedInKey, draft.phone);
+    return draft;
   }
 
   @override
-  Future<Farmer> completeSignUp({required String phone, required Farmer draft}) async {
-    final farmer = draft.copyWith(phone: phone);
-    _accounts[phone] = farmer;
+  Future<Farmer> signIn({required String phone}) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    final farmer = _accounts[phone];
+    if (farmer == null) throw NoAccountFound(phone);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_signedInKey, phone);
     return farmer;
