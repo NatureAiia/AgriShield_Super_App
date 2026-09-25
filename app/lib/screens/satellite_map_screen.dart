@@ -18,6 +18,7 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
   List<SatelliteZone> _zones = [];
   SatelliteZone? _selected;
   bool _loading = true;
+  int _scanId = 0; // bumps on each refresh so the sweep replays
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
     setState(() {
       _zones = zones;
       _loading = false;
+      _scanId++;
     });
   }
 
@@ -103,54 +105,72 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
                 ),
               ),
             ),
+          if (!_loading) ...[
+            _ScanStatus(key: ValueKey(_scanId)),
+            const SizedBox(height: 10),
+          ],
           if (!_loading)
             AppCard(
-              child: GridView.count(
-                crossAxisCount: 3,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 6,
-                crossAxisSpacing: 6,
+              child: Stack(
                 children: [
-                  for (var i = 0; i < _zones.length; i++)
-                    Builder(builder: (context) {
-                      final zone = _zones[i];
-                      final selected = _selected?.id == zone.id;
-                      return GestureDetector(
-                        onTap: () => setState(() => _selected = zone),
-                        child: AnimatedScale(
-                          duration: const Duration(milliseconds: 150),
-                          scale: selected ? 0.92 : 1.0,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: _colorFor(zone.status),
-                              borderRadius: BorderRadius.circular(8),
-                              border: zone.isFarmerPlot ? Border.all(color: context.colors.onSurface, width: 3) : null,
+                  GridView.count(
+                    crossAxisCount: 3,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 6,
+                    crossAxisSpacing: 6,
+                    children: [
+                      for (var i = 0; i < _zones.length; i++)
+                        Builder(builder: (context) {
+                          final zone = _zones[i];
+                          final selected = _selected?.id == zone.id;
+                          return GestureDetector(
+                            onTap: () => setState(() => _selected = zone),
+                            child: AnimatedScale(
+                              duration: const Duration(milliseconds: 150),
+                              scale: selected ? 0.92 : 1.0,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: _colorFor(zone.status),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: zone.isFarmerPlot ? Border.all(color: context.colors.onSurface, width: 3) : null,
+                                ),
+                                child: zone.isFarmerPlot
+                                    ? Center(
+                                        child: Container(
+                                          // White text directly on a saturated status color
+                                          // (green/amber/red) fails WCAG AA on its own
+                                          // (checked: 2.1-3.8:1) — a dark backdrop fixes it
+                                          // regardless of which status color is underneath.
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withValues(alpha: 0.6),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(color: Colors.white, width: 1.5),
+                                          ),
+                                          child: const Text('YOU • Mai Moyo',
+                                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 10)),
+                                        )
+                                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                                            .scaleXY(begin: 1.0, end: 1.08, duration: 900.ms, curve: Curves.easeInOut),
+                                      )
+                                    : null,
+                              ),
                             ),
-                            child: zone.isFarmerPlot
-                                ? Center(
-                                    child: Container(
-                                      // White text directly on a saturated status color
-                                      // (green/amber/red) fails WCAG AA on its own
-                                      // (checked: 2.1-3.8:1) — a dark backdrop fixes it
-                                      // regardless of which status color is underneath.
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.6),
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(color: Colors.white, width: 1.5),
-                                      ),
-                                      child: const Text('YOU • Mai Moyo',
-                                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 10)),
-                                    )
-                                        .animate(onPlay: (c) => c.repeat(reverse: true))
-                                        .scaleXY(begin: 1.0, end: 1.08, duration: 900.ms, curve: Curves.easeInOut),
-                                  )
-                                : null,
-                          ),
-                        ),
-                      ).animate().fadeIn(delay: (i * 35).ms, duration: 300.ms).scaleXY(begin: 0.85, end: 1, curve: Curves.easeOutBack);
-                    }),
+                          ).animate().fadeIn(delay: (i * 35).ms, duration: 300.ms).scaleXY(begin: 0.85, end: 1, curve: Curves.easeOutBack);
+                        }),
+                    ],
+                  ),
+                  // A one-pass radar sweep over the fresh grid, then gone —
+                  // IgnorePointer keeps zone taps working underneath.
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: _RadarSweep(key: ValueKey(_scanId)),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -222,6 +242,87 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
         Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
         Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.onSurface)),
+      ],
+    );
+  }
+}
+
+class _RadarSweep extends StatelessWidget {
+  const _RadarSweep({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return OverflowBox(
+      maxWidth: 900,
+      maxHeight: 900,
+      child: Container(
+        width: 900,
+        height: 900,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: SweepGradient(
+            colors: [
+              Colors.transparent,
+              Colors.transparent,
+              AgriShieldBrand.mint.withValues(alpha: 0.05),
+              AgriShieldBrand.mint.withValues(alpha: 0.45),
+            ],
+            stops: const [0, 0.7, 0.9, 1],
+          ),
+        ),
+      )
+          .animate()
+          .rotate(begin: 0, end: 2, duration: 2200.ms, curve: Curves.easeInOut)
+          .fadeOut(delay: 1900.ms, duration: 400.ms),
+    );
+  }
+}
+
+/// "Scanning district…" with a pulsing dot, flipping to a satellite-sourced
+/// done state once the sweep has passed.
+class _ScanStatus extends StatefulWidget {
+  const _ScanStatus({super.key});
+
+  @override
+  State<_ScanStatus> createState() => _ScanStatusState();
+}
+
+class _ScanStatusState extends State<_ScanStatus> {
+  bool _done = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 2200), () {
+      if (mounted) setState(() => _done = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.colors.secondary;
+    return Row(
+      children: [
+        Icon(Icons.radar_rounded, size: 18, color: color)
+            .animate(onPlay: (c) => c.repeat(reverse: true))
+            .rotate(begin: -0.03, end: 0.03, duration: 1200.ms),
+        const SizedBox(width: 8),
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: Text(
+              _done ? 'District view ready' : 'Scanning your district…',
+              key: ValueKey(_done),
+              style: TextStyle(fontWeight: FontWeight.w700, color: context.colors.onSurface),
+            ),
+          ),
+        ),
+        if (!_done)
+          Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle))
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .fadeOut(duration: 500.ms)
+        else
+          Icon(Icons.check_circle_rounded, size: 18, color: color).animate().scaleXY(begin: 0, end: 1, curve: Curves.easeOutBack),
       ],
     );
   }

@@ -21,7 +21,7 @@ class MockDiseaseService implements DiseaseService {
   @override
   Future<DiseaseResult> analyze(Uint8List photoBytes) async {
     // Simulates on-device inference latency.
-    await Future.delayed(const Duration(milliseconds: 1400));
+    await Future.delayed(const Duration(milliseconds: 2200));
     return const DiseaseResult(
       likelyIssue: 'Maize Northern Leaf Blight',
       confidence: 0.94,

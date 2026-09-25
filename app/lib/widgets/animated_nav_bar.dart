@@ -92,7 +92,9 @@ class _NavButton extends StatelessWidget {
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               style: TextStyle(fontSize: 10.5, fontWeight: selected ? FontWeight.w800 : FontWeight.w600, color: color),
-              child: Text(item.label),
+              // One line always: six tabs on a narrow phone would otherwise
+              // wrap the longest label ("Recommend") mid-word.
+              child: FittedBox(fit: BoxFit.scaleDown, child: Text(item.label, maxLines: 1, softWrap: false)),
             ),
           ],
         ),

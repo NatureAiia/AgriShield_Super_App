@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../services/auth_service.dart';
 import '../../theme.dart';
+import '../farmer_story_screen.dart';
 import 'sign_in_screen.dart';
 import 'sign_up_screen.dart';
 
@@ -47,7 +48,7 @@ class LandingScreen extends StatelessWidget {
                   ).animate().fadeIn(delay: 150.ms, duration: 400.ms).slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
                   const SizedBox(height: 10),
                   Text(
-                    'Watch your storage, check a sick plant, and see your\nfield from space — even with no signal.',
+                    'Keep your harvest safe — on any phone,\neven with no signal.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14, height: 1.5, color: context.colors.onSurface.withValues(alpha: 0.65)),
                   ).animate().fadeIn(delay: 250.ms, duration: 400.ms).slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
@@ -75,6 +76,13 @@ class LandingScreen extends StatelessWidget {
                       child: const Text('I already have an account'),
                     ),
                   ).animate().fadeIn(delay: 420.ms, duration: 400.ms),
+                  TextButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const FarmerStoryScreen(finishLabel: 'Got it')),
+                    ),
+                    icon: const Icon(Icons.play_circle_outline_rounded),
+                    label: const Text('How AgriShield helps you'),
+                  ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
                   const SizedBox(height: 8),
                 ],
               ),

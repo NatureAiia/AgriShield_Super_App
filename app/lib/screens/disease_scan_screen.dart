@@ -5,6 +5,7 @@ import '../models/disease_result.dart';
 import '../services/disease_service.dart';
 import '../theme.dart';
 import '../widgets/app_card.dart';
+import '../widgets/leaf_scan_animation.dart';
 import '../widgets/pressable.dart';
 
 class DiseaseScanScreen extends StatefulWidget {
@@ -70,36 +71,7 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
               child: _scanning
-                  ? Column(
-                      key: const ValueKey('scanning'),
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              width: 140,
-                              height: 140,
-                              decoration: BoxDecoration(
-                                color: context.colors.secondary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: context.colors.secondary.withValues(alpha: 0.4)),
-                              ),
-                              child: Icon(Icons.eco, size: 56, color: context.colors.secondary.withValues(alpha: 0.5)),
-                            ),
-                            // Laser sweep — the sci-fi wow, pure flutter_animate.
-                            Container(width: 120, height: 3, color: context.colors.secondary)
-                                .animate(onPlay: (c) => c.repeat(reverse: true))
-                                .moveY(begin: -52, end: 52, duration: 900.ms, curve: Curves.easeInOut),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          'Reading leaf… on-device AI',
-                          style: TextStyle(color: context.colors.secondary, fontWeight: FontWeight.w700),
-                        ).animate(onPlay: (c) => c.repeat(reverse: true)).opacity(begin: 0.5, end: 1, duration: 700.ms),
-                      ],
-                    )
+                  ? const LeafScanAnimation(key: ValueKey('scanning'))
                   : Pressable(
                       key: const ValueKey('idle'),
                       onTap: _runScan,

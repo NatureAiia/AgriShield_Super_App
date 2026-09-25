@@ -1,3 +1,5 @@
+import 'dart:math';
+
 enum MoldRisk { low, moderate, high }
 
 /// One reading from Part 1's solar sensor box — temperature, humidity, and
@@ -29,13 +31,14 @@ class StorageReading {
     required this.takenAt,
   });
 
-  /// Baseline: 48 hours of good condition at 20°C, halving every +10°C.
+  /// Baseline: 48 hours of good condition at 20°C, halving every +10°C —
+  /// applied smoothly (2^(Δ/10)), not in whole steps, so a 2°C cooler
+  /// reading shows as a few more hours rather than nothing or a jump of 24.
   double get estimatedShelfLifeHours {
     const baselineHours = 48.0;
     const baselineTempC = 20.0;
-    final degreesAboveBaseline = (temperatureC - baselineTempC).clamp(0, 100);
-    final halvings = degreesAboveBaseline / 10.0;
-    return baselineHours / (1 << halvings.floor()).toDouble();
+    final degreesAboveBaseline = (temperatureC - baselineTempC).clamp(0, 100).toDouble();
+    return baselineHours / pow(2, degreesAboveBaseline / 10.0);
   }
 
   /// Outdoor ambient CO2 is roughly 400–420ppm. Enclosed grain storage
