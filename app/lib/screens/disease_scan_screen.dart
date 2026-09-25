@@ -5,6 +5,7 @@ import '../models/disease_result.dart';
 import '../services/disease_service.dart';
 import '../theme.dart';
 import '../widgets/app_card.dart';
+import '../widgets/leaf_scan_animation.dart';
 import '../widgets/pressable.dart';
 
 class DiseaseScanScreen extends StatefulWidget {
@@ -51,22 +52,7 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
               child: _scanning
-                  ? Column(
-                      key: const ValueKey('scanning'),
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 64,
-                          height: 64,
-                          child: CircularProgressIndicator(strokeWidth: 3, color: context.colors.secondary),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          'Checking leaf photo…',
-                          style: TextStyle(color: context.colors.secondary, fontWeight: FontWeight.w700),
-                        ),
-                      ],
-                    )
+                  ? const LeafScanAnimation(key: ValueKey('scanning'))
                   : Pressable(
                       key: const ValueKey('idle'),
                       onTap: _runScan,
@@ -100,9 +86,21 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('LIKELY ISSUE', style: context.text.labelSmall),
-                        Text(_result!.likelyIssue,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: context.colors.onSurface)),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('LIKELY ISSUE', style: context.text.labelSmall),
+                                  Text(_result!.likelyIssue,
+                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: context.colors.onSurface)),
+                                ],
+                              ),
+                            ),
+                            _ConfidenceRing(confidence: _result!.confidence),
+                          ],
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           '${_result!.confidenceLabel} — first opinion, not a final answer.',
@@ -128,6 +126,41 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
                 ),
         ),
       ],
+    );
+  }
+}
+
+/// The model's confidence as a ring that fills on reveal.
+class _ConfidenceRing extends StatelessWidget {
+  final double confidence;
+  const _ConfidenceRing({required this.confidence});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: confidence.clamp(0.0, 1.0)),
+      duration: const Duration(milliseconds: 1000),
+      curve: Curves.easeOutCubic,
+      builder: (context, v, _) => SizedBox(
+        width: 58,
+        height: 58,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox.expand(
+              child: CircularProgressIndicator(
+                value: v,
+                strokeWidth: 5,
+                strokeCap: StrokeCap.round,
+                color: context.colors.secondary,
+                backgroundColor: context.colors.outline,
+              ),
+            ),
+            Text('${(v * 100).round()}%',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: context.colors.onSurface)),
+          ],
+        ),
+      ),
     );
   }
 }

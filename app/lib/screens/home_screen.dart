@@ -7,14 +7,17 @@ import '../services/sensor_service.dart';
 import '../theme.dart';
 import '../widgets/animated_count.dart';
 import '../widgets/app_card.dart';
+import '../widgets/coming_soon_carousel.dart';
+import '../widgets/incoming_call_overlay.dart';
 import '../widgets/risk_badge.dart';
 import '../widgets/shimmer_box.dart';
 
-/// Home dashboard — a dense, bento-style grid of the real V1 signals
-/// (shelf life, mold risk, CO2, cooler effect), not a decorative landing
-/// screen. Every tile is real, computed data; nothing here anticipates
-/// V2/V3 features (weather, prices, market alerts) that don't exist yet —
-/// same honesty principle as the rest of the roadmap.
+/// Home dashboard — a hero card for the cooler's effect and a dense,
+/// bento-style grid of the real V1 signals (shelf life, mold risk, CO2,
+/// cooler effect). Every number above the fold is real, computed data.
+/// V2/V3 features (weather, prices, insurance…) appear only in the
+/// "What's coming next" row at the bottom, each badged SOON — same
+/// honesty principle as the rest of the roadmap: roadmap, said plainly.
 class HomeScreen extends StatefulWidget {
   final Farmer farmer;
   final SensorService sensorService;
@@ -41,19 +44,20 @@ class _HomeScreenState extends State<HomeScreen> {
         ? 'Move your ${widget.farmer.crop.toLowerCase()} to a cooler, drier place to reduce mold risk.'
         : 'Your ${widget.farmer.crop.toLowerCase()} has about ${reading.estimatedShelfLifeHours.toStringAsFixed(0)} '
             'hours of good condition left — sell today.';
-    final sent = await widget.messagingService.sendAlert(farmer: widget.farmer, message: message);
+    await showIncomingCallOverlay(
+      context,
+      farmerName: widget.farmer.name,
+      message: message,
+      send: () => widget.messagingService.sendAlert(farmer: widget.farmer, message: message),
+    );
     if (!mounted) return;
     setState(() => _sendingAlert = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: sent ? context.colors.secondary : context.colors.error,
-        content: Text(
-          sent
-              ? '📞 Alert sent over Africa\'s Talking: "$message"'
-              : 'Could not reach the backend — alert queued, will send once connected.',
-        ),
-      ),
-    );
+  }
+
+  static String _greeting(DateTime now) {
+    if (now.hour < 12) return 'Good morning,';
+    if (now.hour < 17) return 'Good afternoon,';
+    return 'Good evening,';
   }
 
   @override
@@ -71,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Text('Good morning,', style: TextStyle(color: context.colors.secondary, fontSize: 14))
+                Text(_greeting(DateTime.now()), style: TextStyle(color: context.colors.secondary, fontSize: 14))
                     .animate()
                     .fadeIn(duration: 350.ms)
                     .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -80,6 +84,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     .fadeIn(delay: 60.ms, duration: 350.ms)
                     .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
                 const SizedBox(height: 16),
+                _CoolerHero(crop: widget.farmer.crop, outside: outside, inside: reading)
+                    .animate()
+                    .fadeIn(delay: 120.ms, duration: 450.ms)
+                    .scaleXY(begin: 0.96, end: 1, curve: Curves.easeOutCubic),
+                const SizedBox(height: 12),
                 GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
@@ -148,9 +157,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onSecondary),
                           )
                         : const Icon(Icons.phone_forwarded),
-                    label: Text(_sendingAlert ? 'Calling farmer…' : 'Trigger farmer alert now'),
+                    label: Text(_sendingAlert ? 'Calling farmer…' : 'Call the farmer now'),
                   ),
                 ).animate().fadeIn(delay: 320.ms, duration: 400.ms).slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
+                const SizedBox(height: 24),
+                const ComingSoonCarousel(),
+                const SizedBox(height: 8),
               ],
             );
           },
@@ -194,6 +206,146 @@ class _BentoTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The one number a judge should remember: how much longer the crop lasts
+/// inside the zeer cooler than outside it, from the same live readings and
+/// shelf-life estimate as the tiles below (StorageReading).
+class _CoolerHero extends StatelessWidget {
+  final String crop;
+  final StorageReading? outside;
+  final StorageReading? inside;
+
+  const _CoolerHero({required this.crop, required this.outside, required this.inside});
+
+  @override
+  Widget build(BuildContext context) {
+    final out = outside?.estimatedShelfLifeHours;
+    final ins = inside?.estimatedShelfLifeHours;
+    final saved = (out != null && ins != null) ? (ins - out).clamp(0.0, 999.0) : null;
+    final maxHours = [out ?? 1, ins ?? 1, 1.0].reduce((a, b) => a > b ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AgriShieldBrand.forestGreen, AgriShieldBrand.leafGreen, Color(0xFF40916C)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AgriShieldRadii.card),
+        boxShadow: [
+          BoxShadow(color: AgriShieldBrand.leafGreen.withValues(alpha: 0.35), blurRadius: 18, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            right: -8,
+            top: -8,
+            child: Icon(Icons.shield_rounded, size: 96, color: Colors.white.withValues(alpha: 0.08))
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scaleXY(begin: 0.95, end: 1.08, duration: 2200.ms, curve: Curves.easeInOut),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(color: AgriShieldBrand.mint, shape: BoxShape.circle),
+                  ).animate(onPlay: (c) => c.repeat(reverse: true)).fadeOut(duration: 900.ms),
+                  const SizedBox(width: 6),
+                  Text('LIVE · ZEER COOLER',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.8)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  saved == null
+                      ? const SizedBox(height: 48, width: 90)
+                      : AnimatedCount(
+                          value: saved,
+                          format: (v) => '+${v.toStringAsFixed(0)}h',
+                          duration: const Duration(milliseconds: 1200),
+                          style: const TextStyle(color: Colors.white, fontSize: 44, fontWeight: FontWeight.w900, height: 1),
+                        ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        'extra shelf life for your ${crop.toLowerCase()}, with no electricity',
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, height: 1.3),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              _HeroBar(label: 'Outside', hours: out, fraction: (out ?? 0) / maxHours, color: const Color(0xFFFCD34D)),
+              const SizedBox(height: 8),
+              _HeroBar(label: 'In cooler', hours: ins, fraction: (ins ?? 0) / maxHours, color: AgriShieldBrand.mint),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroBar extends StatelessWidget {
+  final String label;
+  final double? hours;
+  final double fraction;
+  final Color color;
+
+  const _HeroBar({required this.label, required this.hours, required this.fraction, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 70,
+          child: Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12, fontWeight: FontWeight.w700)),
+        ),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AgriShieldRadii.pill),
+            child: Stack(
+              children: [
+                Container(height: 10, color: Colors.white.withValues(alpha: 0.15)),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: fraction.clamp(0.0, 1.0)),
+                  duration: const Duration(milliseconds: 900),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, v, _) => FractionallySizedBox(
+                    widthFactor: v,
+                    child: Container(height: 10, color: color),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 36,
+          child: Text(
+            hours == null ? '–' : '${hours!.toStringAsFixed(0)}h',
+            textAlign: TextAlign.right,
+            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
     );
   }
 }
