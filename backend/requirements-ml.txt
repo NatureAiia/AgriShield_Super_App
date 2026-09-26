@@ -1,0 +1,15 @@
+# ML stack — crop/fertilizer recommendation + server-side disease diagnosis
+# (V2 module ported from AgriLite-FL, GPLv3 — see
+# docs/roadmap/V2_INTELLIGENCE_LAYER.md). Install on top of
+# requirements.txt where the host can take it (Docker/Render/VPS, or a
+# cPanel with headroom). Hosts that can't (Vercel serverless, tight shared
+# hosting) skip this file: the API auto-drops those two routers and runs
+# everything else. The disease model runs as TFLite (converted from
+# AgriLite-FL's original PyTorch checkpoint via ONNX/onnx2tf — see
+# backend/scripts/convert_to_tflite.py) specifically to avoid a
+# torch/torchvision runtime dependency here.
+scikit-learn==1.9.1
+pandas==3.0.6
+numpy==2.5.3
+ai-edge-litert==2.1.2
+pillow==12.3.0

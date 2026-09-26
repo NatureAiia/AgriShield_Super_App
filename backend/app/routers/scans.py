@@ -9,10 +9,20 @@ from ..database import get_db
 router = APIRouter(prefix="/scans", tags=["scans"])
 
 # The server-side diagnosis model needs numpy/ai-edge-litert/Pillow, which
-# shared hosting often can't install — so this one route is compiled out
-# when AGRISHIELD_LITE=1 (see backend/requirements-cpanel.txt). Scan
-# *logging* below stays: history works in lite mode, diagnosis doesn't.
-if os.getenv("AGRISHIELD_LITE") != "1":
+# serverless and shared hosts often can't install — so this one route is
+# compiled out when they're absent (explicit AGRISHIELD_LITE=1, otherwise
+# automatic on ImportError). Scan *logging* below always stays: history
+# works in lite mode, diagnosis doesn't.
+try:
+    if os.getenv("AGRISHIELD_LITE") == "1":
+        raise ImportError("lite mode")
+    from ..services import disease_model_service  # lazy: heavy deps
+
+    _DIAGNOSE_AVAILABLE = True
+except ImportError:
+    _DIAGNOSE_AVAILABLE = False
+
+if _DIAGNOSE_AVAILABLE:
 
     @router.post("/diagnose", response_model=schemas.DiseaseDiagnosisOut)
     async def diagnose(file: UploadFile):
@@ -21,8 +31,6 @@ if os.getenv("AGRISHIELD_LITE") != "1":
         Part 1's original on-device TFLite check. Returns a diagnosis only;
         POST the result to `/scans` with source="server" to log it, same as
         the on-device flow does."""
-        from ..services import disease_model_service  # lazy: heavy deps
-
         image_bytes = await file.read()
         try:
             label, advice = disease_model_service.diagnose(image_bytes)

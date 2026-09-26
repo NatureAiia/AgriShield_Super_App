@@ -8,14 +8,19 @@ from .config import settings
 from .database import Base, engine
 from .routers import alerts, farmers, prices, satellite, scans, storage, weather
 
-# Lite mode for cPanel shared hosting (AGRISHIELD_LITE=1 + install
-# requirements-cpanel.txt): skips the recommendations router, whose service
-# imports pandas/scikit-learn at module level — the one import shared hosts
-# routinely OOM on. Everything else (incl. /scans/diagnose, which gates
-# itself in routers/scans.py) loads without ML dependencies.
+# Lite mode: the ML routers need pandas/scikit-learn/numpy/ai-edge-litert,
+# which serverless (Vercel) and tight shared hosts can't install. Instead of
+# crashing the whole API when they're absent, the app compiles those routers
+# out and serves everything else (auth, storage, scan-log, satellite,
+# alerts, weather, prices). Explicit via AGRISHIELD_LITE=1, otherwise
+# automatic on ImportError — so a plain `pip install -r requirements.txt`
+# always yields a working API.
 LITE = os.getenv("AGRISHIELD_LITE") == "1"
 if not LITE:
-    from .routers import recommendations
+    try:
+        from .routers import recommendations
+    except ImportError:
+        LITE = True
 
 Base.metadata.create_all(bind=engine)
 

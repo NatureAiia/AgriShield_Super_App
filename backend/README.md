@@ -21,6 +21,24 @@ Defaults to a local SQLite file (`agrishield.db`) — set `DATABASE_URL` in `.en
 
 `requirements.txt` pins `pg8000` (a pure-Python Postgres driver) rather than the far more common `psycopg2-binary`. On at least one dev machine used on this project, Windows Defender Application Control blocked psycopg2's compiled `_psycopg.pyd` outright (`ImportError: ... An Application Control policy has blocked this file`) — a machine-level policy, not fixable from application code. pg8000 has no compiled extension, so there's nothing for a code-integrity policy to block. If your own machine doesn't have this restriction, psycopg2-binary would work too; pg8000 was kept since it's proven to work everywhere this was tested. Needs `sslmode`/`ssl_context` explicitly since Supabase requires SSL — see `app/database.py`.
 
+## Requirements split
+
+- `requirements.txt` — slim core, installs everywhere. Hosts without the
+  ML stack automatically run lite (no `/recommendations/*`,
+  no `/scans/diagnose`; everything else works).
+- `requirements-ml.txt` — scikit-learn/pandas/numpy/ai-edge-litert/pillow
+  for crop/fertilizer advice + server diagnosis. Install on Docker/Render/
+  VPS alongside the core file.
+
+## Vercel deploy (serverless API)
+
+Vercel project with **Root Directory `backend`**: auto-detects
+`api/index.py` (re-exports the FastAPI app; `vercel.json` routes all paths
+to it). Only `requirements.txt` is installed, so it runs lite by design.
+Env vars: `DATABASE_URL` (Supabase **pooler**, port 6543 — required, direct
+connections exhaust from serverless), `CORS_ORIGINS` (the frontend origin).
+No `AGRISHIELD_LITE` needed — auto-detected.
+
 ## cPanel deploy (Tremhost shared hosting)
 
 Frontend (`../web-demo/dist`, built with `.env.production`) goes to
@@ -30,13 +48,10 @@ App**: application root = uploaded `backend/` folder, startup file =
 app's environment: `DATABASE_URL` (Supabase **pooler**, port 6543),
 `CORS_ORIGINS` (the frontend origin), `AGRISHIELD_LITE` only if slim.
 
-1. Try full first: `pip install -r requirements.txt`. If pip OOM-kills on
-   scikit-learn/pandas/ai-edge-litert, switch to the slim fallback:
-   `pip install -r requirements-cpanel.txt` + `AGRISHIELD_LITE=1`.
-2. Lite mode drops the ML routers (`/recommendations/*`,
-   `/scans/diagnose` → gone); auth, storage, scan-log, satellite, alerts,
-   weather, prices all work. Verified by importing `app.main` with those
-   packages hard-blocked.
+1. Try full first: `pip install -r requirements.txt -r requirements-ml.txt`.
+   If pip OOM-kills on the ML stack, install just `requirements.txt` and
+   (optionally) set `AGRISHIELD_LITE=1` — lite is automatic anyway when the
+   packages are missing.
 3. Check `https://<api>/health`, `/docs`, `/weather/current?lat=-17.82&lon=31.05`.
 
 ## Testing

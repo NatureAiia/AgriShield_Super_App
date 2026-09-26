@@ -1,3 +1,8 @@
+# Slim core — installs everywhere (Vercel serverless, cPanel shared).
+# ML stack (crop/fertilizer advice, server leaf diagnosis) lives in
+# requirements-ml.txt and is imported opportunistically: routers that need
+# it compile themselves out when the packages are absent (see app/main.py,
+# app/routers/scans.py) instead of crashing the whole API.
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 sqlalchemy==2.0.35
@@ -11,15 +16,3 @@ python-multipart==0.0.32
 # Windows Defender Application Control policy blocks psycopg2's compiled
 # _psycopg.pyd outright — pg8000 has no compiled extension to block.
 pg8000==1.31.5
-
-# Crop/fertilizer recommendation + server-side disease diagnosis (V2
-# module ported from AgriLite-FL, GPLv3 — see
-# docs/roadmap/V2_INTELLIGENCE_LAYER.md). The disease model runs as
-# TFLite (converted from AgriLite-FL's original PyTorch checkpoint via
-# ONNX/onnx2tf — see backend/scripts/convert_to_tflite.py) specifically
-# to avoid a torch/torchvision runtime dependency here.
-scikit-learn==1.9.1
-pandas==3.0.6
-numpy==2.5.3
-ai-edge-litert==2.1.2
-pillow==12.3.0

@@ -1,19 +1,37 @@
-# Deploy runbook — cPanel (Tremhost) + Supabase
+# Deploy runbook — cPanel frontend (Tremhost) + Vercel serverless API + Supabase
 
 Status: Supabase project verified live; `farmers` table exists and is
-queryable (`GET /rest/v1/farmers` → 200). Webapp dist built with the API
-URL below baked in (`web-demo/webapp-dist-cpanel.zip`, git-ignored).
+queryable (`GET /rest/v1/farmers` → 200).
+
+> Decision log: the API was first staged for cPanel's Python Selector, but
+> the account has no Python Selector (nothing found in cPanel search) and
+> its CLI crashes with a system-dir `PermissionError` — so cPanel can't run
+> Python at all. The API therefore goes to Vercel serverless (slim/lite);
+> cPanel serves the static frontend only. If Tremhost later enables the
+> Python Selector, `passenger_wsgi.py` + the full requirements are still in
+> the repo for that path.
 
 ## Hostnames
 
 | Piece | URL |
 |---|---|
 | Frontend (static, `public_html`) | http://welcoming-navy-sparrow.172-93-106-10.cpanel.site/ |
-| Backend API (Python app at URI `/`) | http://diplomatic-onyx-antelope.172-93-106-10.cpanel.site |
+| Backend API (Vercel, Root Directory `backend`) | TBD after Vercel deploy — then rebuild the frontend zip with it |
 
-cPanel refuses subdomains on temp domains, so the API gets its own temp
-domain instead of `api.*`. `CORS_ORIGINS` on the backend must be the
-frontend origin above.
+## API on Vercel (user clicks, ~10 min)
+
+1. Vercel → New Project → import repo → **Root Directory `backend`**.
+2. Env vars: `DATABASE_URL` = Supabase **pooler** URI (port 6543 —
+   required from serverless), `CORS_ORIGINS` =
+   `http://welcoming-navy-sparrow.172-93-106-10.cpanel.site`.
+   No `AGRISHIELD_LITE` needed — lite auto-detects (no ML routers on
+   Vercel: `/recommendations/*` and `/scans/diagnose` stay off).
+3. Deploy → verify `https://<api>/health`, `/docs`,
+   `/weather/current?lat=-17.82&lon=31.05`.
+4. Hand the API URL over: frontend `dist/` gets rebuilt with it
+   (`VITE_AGRISHIELD_API_URL` in `web-demo/.env.production`) and
+   re-uploaded to `public_html`, then a full sign-up → reading round-trip
+   is verified end-to-end.
 
 After AutoSSL is active, switch both to `https://` and rebuild the zip
 (`npx vite build --mode production` in `web-demo/`).
