@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 import os
+
 
 from . import models
 from .config import settings
@@ -42,6 +44,13 @@ app = FastAPI(
     ),
     version="0.1.0",
 )
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"Request: {request.method} {request.url.path}")
+    response = await call_next(request)
+    print(f"Response: {response.status_code}")
+    return response
 
 app.include_router(farmers.router)
 app.include_router(storage.router)
