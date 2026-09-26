@@ -28,10 +28,14 @@ class Settings(BaseSettings):
         # SQLAlchemy + pg8000 needs postgresql+pg8000://. Rewrite so the
         # same .env shape works locally and in prod.
         if v.startswith("postgres://"):
-            return "postgresql+pg8000://" + v[len("postgres://"):]
-        if v.startswith("postgresql://"):
-            return "postgresql+pg8000://" + v[len("postgresql://"):]
-        return v
+            v = "postgresql+pg8000://" + v[len("postgres://"):]
+        elif v.startswith("postgresql://"):
+            v = "postgresql+pg8000://" + v[len("postgresql://"):]
+        # Supabase's dashboard pooler string appends ?pgbouncer=true (meant
+        # for other clients): pg8000 has no such connect kwarg, and neither
+        # does it take sslmode — TLS comes from database.py's ssl_context.
+        # Strip the query string so pasting the dashboard URI just works.
+        return v.split("?", 1)[0]
 
     @property
     def gee_configured(self) -> bool:
