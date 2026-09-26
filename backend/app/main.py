@@ -65,6 +65,10 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+def root():
+    return {"message": "AgriShield API is live", "docs": "/docs", "health": "/health"}
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
