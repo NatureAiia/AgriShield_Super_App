@@ -3,5 +3,19 @@
   "functions": {
     "api/index.py": { "maxDuration": 30 }
   },
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/api/index" }]
+  "rewrites": [
+    { "source": "/health", "destination": "/api/index" },
+    { "source": "/docs", "destination": "/api/index" },
+    { "source": "/openapi.json", "destination": "/api/index" },
+    { "source": "/redoc", "destination": "/api/index" },
+    { "source": "/farmers/(.*)", "destination": "/api/index" },
+    { "source": "/storage/(.*)", "destination": "/api/index" },
+    { "source": "/scans/(.*)", "destination": "/api/index" },
+    { "source": "/satellite/(.*)", "destination": "/api/index" },
+    { "source": "/alerts/(.*)", "destination": "/api/index" },
+    { "source": "/recommendations/(.*)", "destination": "/api/index" },
+    { "source": "/weather/(.*)", "destination": "/api/index" },
+    { "source": "/prices/(.*)", "destination": "/api/index" },
+    { "source": "/(.*)", "destination": "/api/index" }
+  ]
 }
