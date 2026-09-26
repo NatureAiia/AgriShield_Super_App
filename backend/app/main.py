@@ -1,8 +1,10 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from . import models
+from .config import settings
 from .database import Base, engine
-from .routers import alerts, farmers, recommendations, satellite, scans, storage
+from .routers import alerts, farmers, prices, recommendations, satellite, scans, storage, weather
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,6 +29,19 @@ app.include_router(scans.router)
 app.include_router(satellite.router)
 app.include_router(alerts.router)
 app.include_router(recommendations.router)
+app.include_router(weather.router)
+app.include_router(prices.router)
+
+# The hosted webapp calls this API from a browser, so CORS must allow its
+# origin. Empty CORS_ORIGINS = allow all (demo convenience, not prod).
+_cors = [o.strip() for o in settings.cors_origins.split(",") if o.strip()] or ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")

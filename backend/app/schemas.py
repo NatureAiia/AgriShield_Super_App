@@ -116,3 +116,25 @@ class AlertResult(BaseModel):
     sent: bool
     channel: str
     detail: str
+
+
+class WeatherOut(BaseModel):
+    temperature_c: float | None = None
+    humidity_percent: float | None = None
+    rain_mm_24h: float | None = None
+    rain_probability_max: float | None = None
+    advice: str = ""
+    data_source: str = ""
+
+
+class PriceSnapshot(BaseModel):
+    commodity: str
+    market: str
+    price_usd_per_kg: float
+    observed: str = ""
+    source: str = ""
+
+
+class PricesOut(BaseModel):
+    prices: list[PriceSnapshot] = []
+    data_source: str = ""

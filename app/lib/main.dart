@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:async';
 import 'models/farmer.dart';
 import 'repositories/farmer_repository.dart';
 import 'screens/auth/landing_screen.dart';
@@ -18,6 +19,7 @@ import 'services/sensor_service.dart';
 import 'services/theme_controller.dart';
 import 'theme.dart';
 import 'widgets/animated_nav_bar.dart';
+import 'widgets/demo_tour.dart';
 import 'widgets/offline_banner.dart';
 
 void main() {
@@ -72,6 +74,11 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
 
   int _tab = 0;
   Farmer? _farmer;
+  // 60-second stage tour: auto-steps through kDemoScript, driving _tab.
+  // Null timer means the tour is off — normal manual navigation.
+  bool _demoActive = false;
+  int _demoStep = 0;
+  Timer? _demoTimer;
   // null while the initial `isSignedIn` check is in flight (near-instant,
   // local SharedPreferences read); false shows the landing/sign-up/sign-in
   // flow, true proceeds straight to the app — a returning, already-signed
@@ -105,6 +112,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
   }
 
   Future<void> _signOut() async {
+    _stopDemo();
     await _authService.signOut();
     if (!mounted) return;
     setState(() {
@@ -112,6 +120,54 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
       _farmer = null;
       _tab = 0;
     });
+  }
+
+  void _startDemo() {
+    _demoTimer?.cancel();
+    setState(() {
+      _demoActive = true;
+      _demoStep = 0;
+      _tab = kDemoScript[0].tab;
+    });
+    _scheduleDemoStep();
+  }
+
+  void _scheduleDemoStep() {
+    _demoTimer?.cancel();
+    final seconds = kDemoScript[_demoStep].seconds;
+    _demoTimer = Timer(Duration(seconds: seconds), () {
+      if (!mounted || !_demoActive) return;
+      _nextDemoStep();
+    });
+  }
+
+  void _nextDemoStep() {
+    if (!_demoActive) return;
+    if (_demoStep >= kDemoScript.length - 1) {
+      // Last step's Next replays from the top so the presenter can loop.
+      setState(() {
+        _demoStep = 0;
+        _tab = kDemoScript[0].tab;
+      });
+    } else {
+      setState(() {
+        _demoStep++;
+        _tab = kDemoScript[_demoStep].tab;
+      });
+    }
+    _scheduleDemoStep();
+  }
+
+  void _stopDemo() {
+    _demoTimer?.cancel();
+    _demoTimer = null;
+    if (_demoActive && mounted) setState(() => _demoActive = false);
+  }
+
+  @override
+  void dispose() {
+    _demoTimer?.cancel();
+    super.dispose();
   }
 
   Widget _brandedLoading(BuildContext context) {
@@ -176,6 +232,12 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
             .fadeIn(duration: 220.ms)
             .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic, duration: 220.ms),
         actions: [
+          IconButton(
+            icon: Icon(_demoActive ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                key: ValueKey(_demoActive)),
+            tooltip: _demoActive ? 'End 60s demo' : 'Play 60s demo',
+            onPressed: _demoActive ? _stopDemo : _startDemo,
+          ),
           ListenableBuilder(
             listenable: widget.themeController,
             builder: (context, _) => IconButton(
@@ -192,6 +254,12 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
       body: Column(
         children: [
           const OfflineBanner(),
+          if (_demoActive)
+            DemoTourOverlay(
+              stepIndex: _demoStep,
+              onNext: _nextDemoStep,
+              onEnd: _stopDemo,
+            ),
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 260),
@@ -211,7 +279,11 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
       ),
       bottomNavigationBar: AnimatedNavBar(
         selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
+        onDestinationSelected: (i) {
+          // A manual tap takes the presenter off autopilot.
+          if (_demoActive) _stopDemo();
+          setState(() => _tab = i);
+        },
         items: const [
           NavItem(icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'Home'),
           NavItem(icon: Icons.thermostat_outlined, selectedIcon: Icons.thermostat, label: 'Storage'),
