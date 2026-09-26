@@ -1,10 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import os
+
 from . import models
 from .config import settings
 from .database import Base, engine
-from .routers import alerts, farmers, prices, recommendations, satellite, scans, storage, weather
+from .routers import alerts, farmers, prices, satellite, scans, storage, weather
+
+# Lite mode for cPanel shared hosting (AGRISHIELD_LITE=1 + install
+# requirements-cpanel.txt): skips the recommendations router, whose service
+# imports pandas/scikit-learn at module level — the one import shared hosts
+# routinely OOM on. Everything else (incl. /scans/diagnose, which gates
+# itself in routers/scans.py) loads without ML dependencies.
+LITE = os.getenv("AGRISHIELD_LITE") == "1"
+if not LITE:
+    from .routers import recommendations
 
 Base.metadata.create_all(bind=engine)
 
@@ -28,7 +39,8 @@ app.include_router(storage.router)
 app.include_router(scans.router)
 app.include_router(satellite.router)
 app.include_router(alerts.router)
-app.include_router(recommendations.router)
+if not LITE:
+    app.include_router(recommendations.router)
 app.include_router(weather.router)
 app.include_router(prices.router)
 

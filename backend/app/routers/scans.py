@@ -1,26 +1,34 @@
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..database import get_db
-from ..services import disease_model_service
 
 router = APIRouter(prefix="/scans", tags=["scans"])
 
+# The server-side diagnosis model needs numpy/ai-edge-litert/Pillow, which
+# shared hosting often can't install — so this one route is compiled out
+# when AGRISHIELD_LITE=1 (see backend/requirements-cpanel.txt). Scan
+# *logging* below stays: history works in lite mode, diagnosis doesn't.
+if os.getenv("AGRISHIELD_LITE") != "1":
 
-@router.post("/diagnose", response_model=schemas.DiseaseDiagnosisOut)
-async def diagnose(file: UploadFile):
-    """V2 addition — a server-side second opinion using AgriLite-FL's
-    PyTorch model (docs/roadmap/V2_INTELLIGENCE_LAYER.md), alongside
-    Part 1's original on-device TFLite check. Returns a diagnosis only;
-    POST the result to `/scans` with source="server" to log it, same as
-    the on-device flow does."""
-    image_bytes = await file.read()
-    try:
-        label, advice = disease_model_service.diagnose(image_bytes)
-    except Exception as exc:
-        raise HTTPException(status_code=422, detail=f"Could not diagnose image: {exc}") from exc
-    return schemas.DiseaseDiagnosisOut(likely_issue=label, advice=advice)
+    @router.post("/diagnose", response_model=schemas.DiseaseDiagnosisOut)
+    async def diagnose(file: UploadFile):
+        """V2 addition — a server-side second opinion using AgriLite-FL's
+        PyTorch model (docs/roadmap/V2_INTELLIGENCE_LAYER.md), alongside
+        Part 1's original on-device TFLite check. Returns a diagnosis only;
+        POST the result to `/scans` with source="server" to log it, same as
+        the on-device flow does."""
+        from ..services import disease_model_service  # lazy: heavy deps
+
+        image_bytes = await file.read()
+        try:
+            label, advice = disease_model_service.diagnose(image_bytes)
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=f"Could not diagnose image: {exc}") from exc
+        return schemas.DiseaseDiagnosisOut(likely_issue=label, advice=advice)
 
 
 @router.post("", response_model=schemas.DiseaseScanOut)

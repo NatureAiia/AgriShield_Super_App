@@ -1,0 +1,13 @@
+# Slim fallback for cPanel shared hosting (see backend/README.md "cPanel deploy").
+# Full requirements.txt adds scikit-learn / pandas / numpy / ai-edge-litert /
+# pillow for V2's crop+fertilizer advice and server-side leaf diagnosis —
+# pip often OOM-kills those on shared hosting. If it does, install THIS file
+# instead and set AGRISHIELD_LITE=1: the API runs without the ML routers
+# (auth, storage, scan-log, satellite, alerts, weather, prices all work).
+fastapi==0.115.0
+sqlalchemy==2.0.35
+pydantic==2.9.2
+pydantic-settings==2.5.2
+python-dotenv==1.0.1
+python-multipart==0.0.32
+pg8000==1.31.5

@@ -21,6 +21,24 @@ Defaults to a local SQLite file (`agrishield.db`) — set `DATABASE_URL` in `.en
 
 `requirements.txt` pins `pg8000` (a pure-Python Postgres driver) rather than the far more common `psycopg2-binary`. On at least one dev machine used on this project, Windows Defender Application Control blocked psycopg2's compiled `_psycopg.pyd` outright (`ImportError: ... An Application Control policy has blocked this file`) — a machine-level policy, not fixable from application code. pg8000 has no compiled extension, so there's nothing for a code-integrity policy to block. If your own machine doesn't have this restriction, psycopg2-binary would work too; pg8000 was kept since it's proven to work everywhere this was tested. Needs `sslmode`/`ssl_context` explicitly since Supabase requires SSL — see `app/database.py`.
 
+## cPanel deploy (Tremhost shared hosting)
+
+Frontend (`../web-demo/dist`, built with `.env.production`) goes to
+`public_html` as static files. The API runs via cPanel's **Setup Python
+App**: application root = uploaded `backend/` folder, startup file =
+`passenger_wsgi.py`, application URL = your `api` subdomain. Set in the
+app's environment: `DATABASE_URL` (Supabase **pooler**, port 6543),
+`CORS_ORIGINS` (the frontend origin), `AGRISHIELD_LITE` only if slim.
+
+1. Try full first: `pip install -r requirements.txt`. If pip OOM-kills on
+   scikit-learn/pandas/ai-edge-litert, switch to the slim fallback:
+   `pip install -r requirements-cpanel.txt` + `AGRISHIELD_LITE=1`.
+2. Lite mode drops the ML routers (`/recommendations/*`,
+   `/scans/diagnose` → gone); auth, storage, scan-log, satellite, alerts,
+   weather, prices all work. Verified by importing `app.main` with those
+   packages hard-blocked.
+3. Check `https://<api>/health`, `/docs`, `/weather/current?lat=-17.82&lon=31.05`.
+
 ## Testing
 
 ```

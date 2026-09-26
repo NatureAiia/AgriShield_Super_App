@@ -25,3 +25,4 @@ build/
 node_modules/
 web-demo/dist/
 web-demo/node_modules/
+web-demo/webapp-dist-cpanel.zip
