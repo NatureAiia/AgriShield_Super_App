@@ -22,7 +22,11 @@ if not LITE:
     except ImportError:
         LITE = True
 
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Database initialization failed: {e}")
+    # We don't crash here so the API can still start and report the error via /health
 
 app = FastAPI(
     title="AgriShield API",
