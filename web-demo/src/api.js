@@ -55,6 +55,7 @@ export const api = {
     if (!data || data.length === 0) throw new Error('No account for this phone number');
     return data[0];
   },
+  updateFarmer: (id, f) => req(`/farmers/${id}`, { method: 'PATCH', body: JSON.stringify(f) }),
   readings: (farmerId) => req(`/storage/readings/${farmerId}`),
   logReading: (r) => req('/storage/readings', { method: 'POST', body: JSON.stringify(r) }),
   scans: (farmerId) => req(`/scans/${farmerId}`),

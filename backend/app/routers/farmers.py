@@ -41,3 +41,18 @@ def get_farmer(farmer_id: str, db: Session = Depends(get_db)):
 @router.get("", response_model=list[schemas.FarmerOut])
 def list_farmers(db: Session = Depends(get_db)):
     return db.query(models.Farmer).all()
+
+
+@router.patch("/{farmer_id}", response_model=schemas.FarmerOut)
+def update_farmer(farmer_id: str, payload: schemas.FarmerUpdate, db: Session = Depends(get_db)):
+    farmer = db.get(models.Farmer, farmer_id)
+    if farmer is None:
+        raise HTTPException(status_code=404, detail="Farmer not found")
+    
+    update_data = payload.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(farmer, key, value)
+    
+    db.commit()
+    db.refresh(farmer)
+    return farmer

@@ -19,6 +19,7 @@ const TABS = [
   { id: 'scan', label: 'Scan', icon: Camera },
   { id: 'map', label: 'Map', icon: MapIcon },
   { id: 'advise', label: 'Advise', icon: Sprout },
+  { id: 'profile', label: 'Profile', icon: Phone },
 ];
 
 function Err({ msg, clear }) {
@@ -138,6 +139,7 @@ export default function App() {
   const [cropOut, setCropOut] = useState(null);
   const [fertOut, setFertOut] = useState(null);
   const [selZone, setSelZone] = useState(null);
+  const [editF, setEditF] = useState(null);
 
   const fail = (e) => setErr(e.message || String(e));
 
@@ -218,6 +220,20 @@ export default function App() {
       setFertOut(await api.fertilizer({
         crop: fd.get('crop'), nitrogen: +fd.get('n'), phosphorous: +fd.get('p'), potassium: +fd.get('k'),
       }));
+    } catch (e2) { fail(e2); } finally { setBusy(false); }
+  };
+
+  const saveProfile = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    setBusy(true); setErr('');
+    try {
+      const updated = await api.updateFarmer(farmer.id, {
+        name: fd.get('name'), location: fd.get('location'),
+        crop: fd.get('crop'), storage_hub: fd.get('storage_hub'),
+      });
+      setFarmer(updated);
+      setEditF(null);
     } catch (e2) { fail(e2); } finally { setBusy(false); }
   };
 
@@ -428,6 +444,48 @@ export default function App() {
               )) : <p className="sub">No snapshot published yet.</p>}
               {prices && <p className="honesty" style={{ textAlign: 'left' }}>{prices.data_source}</p>}
             </div>
+          </div>
+        )}
+
+        {tab === 'profile' && (
+          <div className="fadein" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="card">
+              <span className="pill">FARMER RECORD</span>
+              <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className="mini" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <small className="sub">NAME</small><b>{farmer.name}</b>
+                </div>
+                <div className="mini" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <small className="sub">LOCATION</small><b>{farmer.location}</b>
+                </div>
+                <div className="mini" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <small className="sub">PRIMARY CROP</small><b>{farmer.crop}</b>
+                </div>
+                <div className="mini" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <small className="sub">STORAGE HUB</small><b>{farmer.storage_hub}</b>
+                </div>
+                <div className="mini" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <small className="sub">PHONE</small><b>{farmer.phone}</b>
+                </div>
+              </div>
+              <button className="btn btn-ghost" style={{ width: '100%', marginTop: 16 }} onClick={() => setEditF(true)}>Edit Profile</button>
+            </div>
+
+            {editF && (
+              <form className="card plain fadein" onSubmit={saveProfile}>
+                <b>Update Information</b>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+                  <Field label="NAME" name="name" defaultValue={farmer.name} required />
+                  <Field label="LOCATION" name="location" defaultValue={farmer.location} required />
+                  <Field label="CROP" name="crop" defaultValue={farmer.crop} required />
+                  <Field label="STORAGE HUB" name="storage_hub" defaultValue={farmer.storage_hub} required />
+                </div>
+                <div className="grid2" style={{ marginTop: 16 }}>
+                  <button className="btn btn-green" disabled={busy}>Save Changes</button>
+                  <button className="btn btn-ghost" onClick={() => setEditF(false)}>Cancel</button>
+                </div>
+              </form>
+            )}
           </div>
         )}
       </main>

@@ -11,6 +11,12 @@ class FarmerIn(BaseModel):
     crop: str
     storage_hub: str
 
+class FarmerUpdate(BaseModel):
+    name: str | None = None
+    location: str | None = None
+    crop: str | None = None
+    storage_hub: str | None = None
+
 
 class FarmerOut(FarmerIn):
     model_config = ConfigDict(from_attributes=True)
