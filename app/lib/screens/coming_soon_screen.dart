@@ -402,7 +402,7 @@ class _MessagePreview extends StatelessWidget {
         CircleAvatar(
           radius: 16,
           backgroundColor: color,
-          child: const Icon(Icons.shield_rounded, size: 18, color: Colors.white),
+          backgroundImage: const AssetImage('assets/branding/logo.jpeg'),
         ),
         const SizedBox(width: 8),
         Expanded(

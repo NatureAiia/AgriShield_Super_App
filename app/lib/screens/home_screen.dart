@@ -432,7 +432,12 @@ class _CoolerHero extends StatelessWidget {
           Positioned(
             right: -8,
             top: -8,
-            child: Icon(Icons.shield_rounded, size: 96, color: Colors.white.withValues(alpha: 0.08))
+            child: ClipOval(
+              child: Opacity(
+                opacity: 0.08,
+                child: Image.asset('assets/branding/logo.jpeg', width: 96, height: 96, fit: BoxFit.cover),
+              ),
+            )
                 .animate(onPlay: (c) => c.repeat(reverse: true))
                 .scaleXY(begin: 0.95, end: 1.08, duration: 2200.ms, curve: Curves.easeInOut),
           ),

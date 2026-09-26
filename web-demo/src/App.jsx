@@ -6,15 +6,16 @@
  * backend's snapshot state honestly instead of invented numbers.
  */
 import React, { useCallback, useEffect, useState } from 'react';
+import brandLogo from '../../assets/logo/1.jpeg';
 import {
-  Shield, Thermometer, Camera, Map as MapIcon, Sprout, CloudRain,
+  House, Thermometer, Camera, Map as MapIcon, Sprout, CloudRain,
   Phone, LogOut, MapPin, WifiOff, AlertTriangle, CheckCircle2, Leaf,
 } from 'lucide-react';
 import { api, apiBase, session } from './api.js';
 
 const HARARE = { lat: -17.82, lon: 31.05 };
 const TABS = [
-  { id: 'home', label: 'Home', icon: Shield },
+  { id: 'home', label: 'Home', icon: House },
   { id: 'storage', label: 'Storage', icon: Thermometer },
   { id: 'scan', label: 'Scan', icon: Camera },
   { id: 'map', label: 'Map', icon: MapIcon },
@@ -48,12 +49,12 @@ function Landing({ onEnter }) {
     <div className="shell">
       <header className="topbar">
         <div className="brand">
-          <div className="logo"><Shield size={22} /></div>
+          <div className="logo"><img src={brandLogo} alt="" /></div>
           <div><h1>AgriShield</h1><p>Climate & Yield Resilience</p></div>
         </div>
       </header>
       <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 24 }}>
-        <div className="logo" style={{ width: 120, height: 120, fontSize: 60 }}><Shield size={80} color="#34d399" /></div>
+        <div className="logo" style={{ width: 120, height: 120 }}><img src={brandLogo} alt="" /></div>
         <div>
           <h2 className="name" style={{ fontSize: 28, margin: 0 }}>Keep your harvest safe</h2>
           <p className="sub" style={{ fontSize: 16, marginTop: 8 }}>On any phone, even with no signal.</p>
@@ -87,7 +88,7 @@ function Auth({ onDone }) {
     <div className="shell">
       <header className="topbar">
         <div className="brand">
-          <div className="logo"><Shield size={22} /></div>
+          <div className="logo"><img src={brandLogo} alt="" /></div>
           <div><h1>AgriShield</h1><p>Keep your harvest safe</p></div>
         </div>
       </header>
@@ -144,7 +145,7 @@ export default function App() {
   const fail = (e) => setErr(e.message || String(e));
 
   const refresh = useCallback(async () => {
-    if (!farmer) return;
+    if (!farmer || !farmer.id) return;
     try {
       const [r, s, z, w, p] = await Promise.all([
         api.readings(farmer.id).catch(() => []),
@@ -243,7 +244,7 @@ export default function App() {
     <div className="shell">
       <header className="topbar">
         <div className="brand">
-          <div className="logo"><Shield size={22} /></div>
+          <div className="logo"><img src={brandLogo} alt="" /></div>
           <div><h1>AgriShield</h1><p>{farmer.name} · {farmer.location}</p></div>
         </div>
         <button className="link" onClick={() => { session.clear(); setFarmer(null); }} title="Sign out">
@@ -260,7 +261,7 @@ export default function App() {
         {tab === 'home' && (
           <div className="fadein" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div className="card">
-              <span className="pill"><span className="live-dot" />LIVE · {farmer.crop.toUpperCase()} · {farmer.storage_hub}</span>
+              <span className="pill"><span className="live-dot" />LIVE · {farmer?.crop?.toUpperCase() || 'CROP'} · {farmer?.storage_hub || 'Hub'}</span>
               {latest ? (
                 <div style={{ display: 'flex', gap: 14, marginTop: 10 }}>
                   <div><small className="sub">TEMP</small><div className="big-num" style={{ fontSize: 34 }}>{latest.temperature_c.toFixed(0)}°C</div></div>

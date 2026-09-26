@@ -3,8 +3,6 @@
  * defaulting to local dev. Session = farmer record in localStorage. */
 
 const BASE = (import.meta.env.VITE_AGRISHIELD_API_URL || 'http://localhost:8000').replace(/\/$/, '');
-const SUPABASE_URL = 'https://flvurqihcfcibsxcxxpx.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_6SV_vyDXOhmbmmEmFpwz9w_iy1fjnNW';
 
 export const apiBase = BASE;
 
@@ -25,36 +23,8 @@ async function req(path, opts = {}) {
 
 export const api = {
   health: () => req('/health'),
-  // SIGN UP: Bypass backend and write directly to Supabase via PostgREST
-  signUp: async (f) => {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/farmers`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify(f),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || 'Sign up failed');
-    }
-    return res.json();
-  },
-  // SIGN IN: Read directly from Supabase
-  signIn: async (phone) => {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/farmers?phone=eq.${phone}&select=*`, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-      },
-    });
-    const data = await res.json();
-    if (!data || data.length === 0) throw new Error('No account for this phone number');
-    return data[0];
-  },
+  signUp: (farmer) => req('/farmers', { method: 'POST', body: JSON.stringify(farmer) }),
+  signIn: (phone) => req(`/farmers/by-phone/${encodeURIComponent(phone)}`),
   updateFarmer: (id, f) => req(`/farmers/${id}`, { method: 'PATCH', body: JSON.stringify(f) }),
   readings: (farmerId) => req(`/storage/readings/${farmerId}`),
   logReading: (r) => req('/storage/readings', { method: 'POST', body: JSON.stringify(r) }),
