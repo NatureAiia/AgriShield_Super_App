@@ -42,6 +42,28 @@ function Field({ label, ...props }) {
 }
 
 /* ---------------- Auth ---------------- */
+function Landing({ onEnter }) {
+  return (
+    <div className="shell">
+      <header className="topbar">
+        <div className="brand">
+          <div className="logo"><Shield size={22} /></div>
+          <div><h1>AgriShield</h1><p>Climate & Yield Resilience</p></div>
+        </div>
+      </header>
+      <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 24 }}>
+        <div className="logo" style={{ width: 120, height: 120, fontSize: 60 }}><Shield size={80} color="#34d399" /></div>
+        <div>
+          <h2 className="name" style={{ fontSize: 28, margin: 0 }}>Keep your harvest safe</h2>
+          <p className="sub" style={{ fontSize: 16, marginTop: 8 }}>On any phone, even with no signal.</p>
+        </div>
+        <button className="btn btn-green" style={{ padding: '16px 32px', fontSize: 18 }} onClick={onEnter}>Get Started</button>
+        <p className="honesty" style={{ marginTop: 20 }}>V1 MVP: Storage, Scan, Satellite & Alerts</p>
+      </main>
+    </div>
+  );
+}
+
 function Auth({ onDone }) {
   const [mode, setMode] = useState('in');
   const [busy, setBusy] = useState(false);
@@ -102,6 +124,7 @@ function Auth({ onDone }) {
 /* ---------------- App ---------------- */
 export default function App() {
   const [farmer, setFarmer] = useState(() => session.load());
+  const [showLanding, setShowLanding] = useState(!farmer);
   const [tab, setTab] = useState('home');
   const [err, setErr] = useState('');
   const [readings, setReadings] = useState([]);
@@ -134,6 +157,7 @@ export default function App() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  if (showLanding) return <Landing onEnter={() => setShowLanding(false)} />;
   if (!farmer) return <Auth onDone={setFarmer} />;
   const latest = readings[0];
 
