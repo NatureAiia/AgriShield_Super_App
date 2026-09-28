@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     africastalking_username: str = ""
     africastalking_api_key: str = ""
 
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-3-5-sonnet-20241022"
+
     # Comma-separated list of browser origins allowed to call the API
     # (the hosted webapp URL in prod). Empty = allow all — fine for a
     # demo, tighten before handling real farmer data.
@@ -44,6 +47,10 @@ class Settings(BaseSettings):
     @property
     def africastalking_configured(self) -> bool:
         return bool(self.africastalking_username and self.africastalking_api_key)
+
+    @property
+    def anthropic_configured(self) -> bool:
+        return bool(self.anthropic_api_key)
 
 
 settings = Settings()

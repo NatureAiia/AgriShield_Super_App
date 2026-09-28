@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:async';
 import 'models/farmer.dart';
 import 'repositories/farmer_repository.dart';
+import 'screens/advice_chat_screen.dart';
 import 'screens/auth/landing_screen.dart';
 import 'screens/disease_scan_screen.dart';
 import 'screens/home_screen.dart';
@@ -11,6 +12,7 @@ import 'screens/recommendation_screen.dart';
 import 'screens/satellite_map_screen.dart';
 import 'screens/storage_screen.dart';
 import 'services/auth_service.dart';
+import 'services/chat_service.dart';
 import 'services/disease_service.dart';
 import 'services/messaging_service.dart';
 import 'services/recommendation_service.dart';
@@ -71,6 +73,18 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
   final RecommendationService _recommendationService = HttpRecommendationService();
   final AuthService _authService = HttpAuthService();
   final FarmerRepository _farmerRepository = FarmerRepository();
+  final ChatService _chatService = HttpChatService();
+
+  // "Ask AgriShield"'s keyword router answers with a suite name
+  // (backend/app/services/advice_router.py); only the suites with a real
+  // screen here get a tab to jump to — weather/prices are still roadmap
+  // (see ComingSoonCarousel), so those replies just skip the deep-link.
+  static const _routeToTab = {
+    'storage': 1,
+    'disease_scan': 2,
+    'recommendations': 3,
+    'satellite': 4,
+  };
 
   int _tab = 0;
   Farmer? _farmer;
@@ -120,6 +134,22 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
       _farmer = null;
       _tab = 0;
     });
+  }
+
+  void _openChat() {
+    if (_demoActive) _stopDemo();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AdviceChatScreen(
+          chatService: _chatService,
+          onOpenRoute: (route) {
+            final tab = _routeToTab[route];
+            Navigator.of(context).pop();
+            if (tab != null) setState(() => _tab = tab);
+          },
+        ),
+      ),
+    );
   }
 
   void _startDemo() {
@@ -250,6 +280,11 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openChat,
+        icon: const Icon(Icons.chat_bubble_outline),
+        label: const Text('Ask AgriShield'),
       ),
       body: Column(
         children: [
