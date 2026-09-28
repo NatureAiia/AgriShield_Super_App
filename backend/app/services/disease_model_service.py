@@ -19,6 +19,7 @@ from ai_edge_litert.interpreter import Interpreter
 from PIL import Image
 
 from ..data.disease_advice import DISEASE_ADVICE
+from ..data.zw_pest_advice import overlay_for_label
 
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _MODEL_PATH = _DATA_DIR / "plant_disease_model.tflite"
@@ -78,4 +79,8 @@ def diagnose(image_bytes: bytes) -> tuple[str, str]:
     outputs = interp.get_tensor(output_details["index"])[0]
 
     label = DISEASE_CLASSES[int(np.argmax(outputs))]
-    return label, DISEASE_ADVICE[label]
+    advice = DISEASE_ADVICE[label]
+    overlay = overlay_for_label(label)
+    if overlay is not None:
+        advice = advice + "\n\n" + overlay
+    return label, advice

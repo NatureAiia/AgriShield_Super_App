@@ -8,7 +8,7 @@ always rely on."""
 from fastapi import APIRouter
 
 from ..schemas import ChatIn, ChatOut
-from ..services import advice_router, ai_advice_service
+from ..services import advice_router, ai_advice_service, offline_agronomy
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -26,6 +26,9 @@ def chat(payload: ChatIn):
         )
         return ChatOut(reply=reply, route=route, route_label=route_label)
     except ai_advice_service.AIUnavailable:
-        # Still useful without the AI: the keyword router alone tells the
-        # farmer which suite answers their question.
-        return ChatOut(reply="", route=route, route_label=route_label, code="ai_unavailable")
+        # Still useful without the AI: the offline agronomy engine answers
+        # common questions in English/ChiShona/isiNdebele, and the keyword
+        # router alone tells the farmer which suite answers the rest.
+        reply = offline_agronomy.answer(payload.message, payload.language) or ""
+        code = None if reply else "ai_unavailable"
+        return ChatOut(reply=reply, route=route, route_label=route_label, code=code)

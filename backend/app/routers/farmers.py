@@ -36,6 +36,8 @@ def get_farmer_by_phone(phone: str, db: Session = Depends(get_db)):
         if farmer is None:
             raise HTTPException(status_code=404, detail="No account for this phone number")
         return farmer
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error fetching farmer by phone {phone}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

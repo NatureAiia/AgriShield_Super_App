@@ -254,6 +254,9 @@ class ChatMessageIn(BaseModel):
 class ChatIn(BaseModel):
     message: str
     history: list[ChatMessageIn] = []
+    # Optional explicit language ("en" | "sn" | "nr", e.g. from the app's
+    # language picker). When omitted the backend guesses from the message.
+    language: str | None = None
 
 
 class ChatOut(BaseModel):
