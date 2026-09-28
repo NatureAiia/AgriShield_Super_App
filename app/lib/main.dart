@@ -4,20 +4,28 @@ import 'dart:async';
 import 'models/farmer.dart';
 import 'repositories/farmer_repository.dart';
 import 'screens/advice_chat_screen.dart';
+import 'screens/advisor_screen.dart';
 import 'screens/auth/landing_screen.dart';
+import 'screens/calendar_screen.dart';
 import 'screens/disease_scan_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/recommendation_screen.dart';
 import 'screens/satellite_map_screen.dart';
 import 'screens/storage_screen.dart';
+import 'screens/weather_screen.dart';
+import 'models/advisor.dart';
+import 'services/advisor_service.dart';
 import 'services/auth_service.dart';
+import 'services/calendar_service.dart';
 import 'services/chat_service.dart';
 import 'services/disease_service.dart';
+import 'services/drought_service.dart';
 import 'services/messaging_service.dart';
 import 'services/recommendation_service.dart';
 import 'services/satellite_service.dart';
 import 'services/sensor_service.dart';
+import 'services/weather_service.dart';
 import 'services/theme_controller.dart';
 import 'theme.dart';
 import 'widgets/animated_nav_bar.dart';
@@ -74,6 +82,10 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
   final AuthService _authService = HttpAuthService();
   final FarmerRepository _farmerRepository = FarmerRepository();
   final ChatService _chatService = HttpChatService();
+  final WeatherService _weatherService = HttpWeatherService();
+  final AdvisorService _advisorService = HttpAdvisorService();
+  final CalendarService _calendarService = HttpCalendarService();
+  final DroughtService _droughtService = HttpDroughtService();
 
   // "Ask AgriShield"'s keyword router answers with a suite name
   // (backend/app/services/advice_router.py); only the suites with a real
@@ -147,6 +159,45 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
             Navigator.of(context).pop();
             if (tab != null) setState(() => _tab = tab);
           },
+        ),
+      ),
+    );
+  }
+
+  void _openWeather() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          appBar: AppBar(title: const Text('Weather & Spraying')),
+          body: WeatherScreen(farmer: _farmer!, weatherService: _weatherService),
+        ),
+      ),
+    );
+  }
+
+  void _openAdvisorHub({
+    AdvisorRequestType initialRequestType = AdvisorRequestType.consultation,
+    String initialNotes = '',
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AdvisorScreen(
+          farmer: _farmer!,
+          advisorService: _advisorService,
+          initialRequestType: initialRequestType,
+          initialNotes: initialNotes,
+        ),
+      ),
+    );
+  }
+
+  void _openCalendar({String? prefillTitle}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CalendarScreen(
+          farmer: _farmer!,
+          calendarService: _calendarService,
+          prefillTitle: prefillTitle,
         ),
       ),
     );
@@ -237,14 +288,28 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
     final screens = [
       HomeScreen(farmer: farmer, sensorService: _sensorService, messagingService: _messagingService),
       StorageScreen(sensorService: _sensorService),
-      DiseaseScanScreen(diseaseService: _diseaseService),
+      DiseaseScanScreen(
+        diseaseService: _diseaseService,
+        onFindAdvisor: (issue) => _openAdvisorHub(
+          initialRequestType: AdvisorRequestType.diseaseEscalation,
+          initialNotes: 'Diagnosed as: $issue',
+        ),
+        onScheduleSpraying: (issue) => _openCalendar(prefillTitle: 'Spray for $issue'),
+      ),
       RecommendationScreen(recommendationService: _recommendationService),
-      SatelliteMapScreen(satelliteService: _satelliteService),
+      SatelliteMapScreen(
+        satelliteService: _satelliteService,
+        farmer: farmer,
+        droughtService: _droughtService,
+      ),
       ProfileScreen(
         farmer: farmer,
         repository: _farmerRepository,
         onSaved: (updated) => setState(() => _farmer = updated),
         onSignOut: _signOut,
+        onOpenWeather: _openWeather,
+        onOpenAdvisorHub: () => _openAdvisorHub(),
+        onOpenCalendar: () => _openCalendar(),
       ),
     ];
 

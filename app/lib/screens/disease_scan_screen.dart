@@ -10,7 +10,18 @@ import '../widgets/pressable.dart';
 
 class DiseaseScanScreen extends StatefulWidget {
   final DiseaseService diseaseService;
-  const DiseaseScanScreen({super.key, required this.diseaseService});
+  /// Opens the AGRITEX advisor hub pre-filled as a disease escalation for
+  /// this result (see main.dart's wiring to AdvisorScreen).
+  final ValueChanged<String>? onFindAdvisor;
+  /// Opens the spraying calendar pre-filled with a "Spray for <issue>" task.
+  final ValueChanged<String>? onScheduleSpraying;
+
+  const DiseaseScanScreen({
+    super.key,
+    required this.diseaseService,
+    this.onFindAdvisor,
+    this.onScheduleSpraying,
+  });
 
   @override
   State<DiseaseScanScreen> createState() => _DiseaseScanScreenState();
@@ -144,9 +155,22 @@ class _DiseaseScanScreenState extends State<DiseaseScanScreen> {
                         const SizedBox(height: 14),
                         SizedBox(
                           width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: widget.onScheduleSpraying == null
+                                ? null
+                                : () => widget.onScheduleSpraying!(_result!.likelyIssue),
+                            icon: const Icon(Icons.event),
+                            label: const Text('Schedule spraying'),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(backgroundColor: context.colors.error, foregroundColor: context.colors.onError),
-                            onPressed: () {},
+                            onPressed: widget.onFindAdvisor == null
+                                ? null
+                                : () => widget.onFindAdvisor!(_result!.likelyIssue),
                             icon: const Icon(Icons.phone),
                             label: const Text('Find an extension officer nearby'),
                           ),

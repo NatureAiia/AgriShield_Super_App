@@ -129,8 +129,108 @@ class WeatherOut(BaseModel):
     humidity_percent: float | None = None
     rain_mm_24h: float | None = None
     rain_probability_max: float | None = None
+    wind_speed_kph: float | None = None
     advice: str = ""
+    # Chemical-spraying suitability (services/spray_advisory.py): a plain
+    # status plus the one-line reason it was picked — never spray timing
+    # advice without saying why.
+    spray_status: str = ""
+    spray_reason: str = ""
     data_source: str = ""
+
+
+class DailyForecastOut(BaseModel):
+    date: str
+    temperature_max_c: float | None = None
+    rain_probability_max: float | None = None
+    wind_speed_max_kph: float | None = None
+    spray_status: str = ""
+    spray_reason: str = ""
+
+
+class ForecastOut(BaseModel):
+    days: list[DailyForecastOut] = []
+    data_source: str = ""
+
+
+class AdvisorOut(BaseModel):
+    id: str
+    name: str
+    role: str
+    district: str
+    phone: str
+
+
+class AdvisorsOut(BaseModel):
+    advisors: list[AdvisorOut] = []
+    data_source: str = ""
+
+
+class AdvisorRequestType(str, Enum):
+    farm_visit = "farm_visit"
+    disease_escalation = "disease_escalation"
+    consultation = "consultation"
+
+
+class AdvisorRequestIn(BaseModel):
+    farmer_id: str
+    advisor_id: str | None = None
+    request_type: AdvisorRequestType
+    notes: str = ""
+
+
+class AdvisorRequestOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    ticket: str
+    status: str
+    request_type: str
+    created_at: datetime
+
+
+class ActivityStatus(str, Enum):
+    pending = "pending"
+    completed = "completed"
+
+
+class ActivityIn(BaseModel):
+    farmer_id: str
+    title: str
+    notes: str = ""
+    scheduled_for: datetime
+    source: str = "manual"
+
+
+class ActivityOut(ActivityIn):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    status: ActivityStatus
+    created_at: datetime
+
+
+class DroughtStatusOut(BaseModel):
+    risk_level: str
+    drought_zone_fraction: float
+    stressed_zone_fraction: float
+    reason: str
+    data_source: str = ""
+
+
+class DroughtReportIn(BaseModel):
+    farmer_id: str
+    district: str
+    risk_level: str
+    notes: str = ""
+
+
+class DroughtReportOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    district: str
+    risk_level: str
+    ticket: str
+    status: str
+    created_at: datetime
 
 
 class PriceSnapshot(BaseModel):

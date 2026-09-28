@@ -77,3 +77,61 @@ class DiseaseScan(Base):
     scanned_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     farmer: Mapped["Farmer"] = relationship(back_populates="disease_scans")
+
+
+class AdvisorRequest(Base):
+    """AGRITEX advisor hub — a farmer's request for a farm visit, a
+    disease escalation, or a general consultation. No real extension-
+    officer directory is integrated yet (services/advisor_service.py
+    returns a labeled placeholder list), so this only logs the request
+    and hands back a ticket; there's no real dispatch behind it, same
+    honesty convention as MessagingService's mock alert channel."""
+
+    __tablename__ = "advisor_requests"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    farmer_id: Mapped[str] = mapped_column(String, ForeignKey("farmers.id"))
+    advisor_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    request_type: Mapped[str] = mapped_column(String, nullable=False)
+    notes: Mapped[str] = mapped_column(String, nullable=False, default="")
+    ticket: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    status: Mapped[str] = mapped_column(String, nullable=False, default="submitted")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Activity(Base):
+    """Spraying & activity calendar — a scheduled farm task (usually a
+    spray triggered by a disease diagnosis, but any farm activity fits).
+    Persisted per farmer so the calendar and the home dashboard's
+    "next activity" card can both read it."""
+
+    __tablename__ = "activities"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    farmer_id: Mapped[str] = mapped_column(String, ForeignKey("farmers.id"))
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    notes: Mapped[str] = mapped_column(String, nullable=False, default="")
+    scheduled_for: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    status: Mapped[str] = mapped_column(String, nullable=False, default="pending")
+    source: Mapped[str] = mapped_column(String, nullable=False, default="manual")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class DroughtReport(Base):
+    """Drought early-warning escalation — a farmer (or, later, an AGRITEX
+    officer) flags a district's satellite-derived drought risk level up
+    to government/civil-protection contacts. No real government channel
+    is integrated yet (services/drought_service.py only aggregates the
+    still-mocked satellite feed), so this only logs the report and hands
+    back a ticket, same honesty convention as AdvisorRequest."""
+
+    __tablename__ = "drought_reports"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    farmer_id: Mapped[str] = mapped_column(String, ForeignKey("farmers.id"))
+    district: Mapped[str] = mapped_column(String, nullable=False)
+    risk_level: Mapped[str] = mapped_column(String, nullable=False)
+    notes: Mapped[str] = mapped_column(String, nullable=False, default="")
+    ticket: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    status: Mapped[str] = mapped_column(String, nullable=False, default="submitted")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

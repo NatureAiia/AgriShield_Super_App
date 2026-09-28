@@ -11,6 +11,9 @@ class ProfileScreen extends StatefulWidget {
   final FarmerRepository repository;
   final ValueChanged<Farmer> onSaved;
   final VoidCallback onSignOut;
+  final VoidCallback onOpenWeather;
+  final VoidCallback onOpenAdvisorHub;
+  final VoidCallback onOpenCalendar;
 
   const ProfileScreen({
     super.key,
@@ -18,6 +21,9 @@ class ProfileScreen extends StatefulWidget {
     required this.repository,
     required this.onSaved,
     required this.onSignOut,
+    required this.onOpenWeather,
+    required this.onOpenAdvisorHub,
+    required this.onOpenCalendar,
   });
 
   @override
@@ -127,6 +133,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: widget.onOpenWeather,
+            icon: const Icon(Icons.wb_sunny_outlined),
+            label: const Text('Weather & spraying advisory'),
+          ),
+        ).animate().fadeIn(delay: 150.ms, duration: 350.ms),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: widget.onOpenAdvisorHub,
+            icon: const Icon(Icons.support_agent_outlined),
+            label: const Text('AGRITEX advisor hub'),
+          ),
+        ).animate().fadeIn(delay: 190.ms, duration: 350.ms),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: widget.onOpenCalendar,
+            icon: const Icon(Icons.event_note_outlined),
+            label: const Text('Spraying & activity calendar'),
+          ),
+        ).animate().fadeIn(delay: 220.ms, duration: 350.ms),
+        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
