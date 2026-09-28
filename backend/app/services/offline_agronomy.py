@@ -153,7 +153,7 @@ def answer(message: str, language: str | None = None) -> str | None:
 
     if _has_any(
         lowered,
-        ["plant", "seed", "variety", "hybrid", "sow", "when to",
+        ["plant", "seed", "variety", "hybrid", "sow", "when to", "suit", "soil",
          "mbeu", "kudyara", "hlanyela", "inhlanyelo", "rinhi"],
     ):
         return _SEED[lang]

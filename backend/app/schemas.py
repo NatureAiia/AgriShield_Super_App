@@ -267,3 +267,10 @@ class ChatOut(BaseModel):
     # call failed — `reply` is then empty and the caller should fall back
     # to `route`/`route_label` alone (see routers/chat.py).
     code: str | None = None
+    # Resolved answer language ("en" | "sn" | "nr") — explicit `language`
+    # from the request, or the backend's guess from the message.
+    language: str | None = None
+    # "ai" when the conversational reply came from the AI, "offline" when
+    # it came from the built-in multilingual agronomy engine, None when
+    # there is no reply at all.
+    source: str | None = None

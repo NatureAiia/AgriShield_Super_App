@@ -8,6 +8,11 @@ class ChatMessage {
   final String? routeLabel;
   final bool aiUnavailable;
   final bool isError;
+  // Backend-resolved answer language ('en' | 'sn' | 'nr') and where the
+  // reply came from ('ai' | 'offline'), shown as a caption under the
+  // bubble so the farmer knows what answered, and in which language.
+  final String? language;
+  final String? source;
 
   const ChatMessage({
     required this.role,
@@ -16,7 +21,10 @@ class ChatMessage {
     this.routeLabel,
     this.aiUnavailable = false,
     this.isError = false,
+    this.language,
+    this.source,
   });
 
   bool get isUser => role == 'user';
+  bool get isOfflineAnswer => source == 'offline';
 }

@@ -18,17 +18,21 @@ def chat(payload: ChatIn):
     match = advice_router.local_intent(payload.message)
     route = match.route if match else None
     route_label = match.label if match else None
+    language = offline_agronomy.detect_language(payload.message, payload.language)
 
     try:
         reply = ai_advice_service.ask(
             payload.message,
             [{"role": m.role, "content": m.content} for m in payload.history],
         )
-        return ChatOut(reply=reply, route=route, route_label=route_label)
+        return ChatOut(reply=reply, route=route, route_label=route_label, language=language, source="ai")
     except ai_advice_service.AIUnavailable:
         # Still useful without the AI: the offline agronomy engine answers
         # common questions in English/ChiShona/isiNdebele, and the keyword
         # router alone tells the farmer which suite answers the rest.
         reply = offline_agronomy.answer(payload.message, payload.language) or ""
         code = None if reply else "ai_unavailable"
-        return ChatOut(reply=reply, route=route, route_label=route_label, code=code)
+        source = "offline" if reply else None
+        return ChatOut(
+            reply=reply, route=route, route_label=route_label, code=code, language=language, source=source
+        )

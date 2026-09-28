@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/farmer.dart';
 import '../repositories/farmer_repository.dart';
+import '../services/language_controller.dart';
 import '../theme.dart';
 import '../widgets/app_card.dart';
+import '../widgets/language_picker.dart';
 import 'farmer_story_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -14,6 +16,7 @@ class ProfileScreen extends StatefulWidget {
   final VoidCallback onOpenWeather;
   final VoidCallback onOpenAdvisorHub;
   final VoidCallback onOpenCalendar;
+  final LanguageController? languageController;
 
   const ProfileScreen({
     super.key,
@@ -24,6 +27,7 @@ class ProfileScreen extends StatefulWidget {
     required this.onOpenWeather,
     required this.onOpenAdvisorHub,
     required this.onOpenCalendar,
+    this.languageController,
   });
 
   @override
@@ -132,6 +136,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(fontSize: 12, color: context.colors.onSurface.withValues(alpha: 0.6)),
           ),
         ),
+        if (widget.languageController != null) ...[
+          const SizedBox(height: 10),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('CHAT LANGUAGE', style: context.text.labelSmall),
+                const SizedBox(height: 4),
+                Text(
+                  'Ask AgriShield answers in this language.',
+                  style: TextStyle(fontSize: 12, color: context.colors.onSurface.withValues(alpha: 0.6)),
+                ),
+                const SizedBox(height: 8),
+                LanguagePicker(controller: widget.languageController!),
+              ],
+            ),
+          ).animate().fadeIn(delay: 100.ms, duration: 350.ms),
+        ],
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,

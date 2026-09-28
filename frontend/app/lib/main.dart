@@ -21,6 +21,7 @@ import 'services/calendar_service.dart';
 import 'services/chat_service.dart';
 import 'services/disease_service.dart';
 import 'services/drought_service.dart';
+import 'services/language_controller.dart';
 import 'services/messaging_service.dart';
 import 'services/recommendation_service.dart';
 import 'services/satellite_service.dart';
@@ -82,6 +83,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
   final AuthService _authService = HttpAuthService();
   final FarmerRepository _farmerRepository = FarmerRepository();
   final ChatService _chatService = HttpChatService();
+  final LanguageController _languageController = LanguageController();
   final WeatherService _weatherService = HttpWeatherService();
   final AdvisorService _advisorService = HttpAdvisorService();
   final CalendarService _calendarService = HttpCalendarService();
@@ -154,6 +156,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
       MaterialPageRoute(
         builder: (_) => AdviceChatScreen(
           chatService: _chatService,
+          languageController: _languageController,
           onOpenRoute: (route) {
             final tab = _routeToTab[route];
             Navigator.of(context).pop();
@@ -310,6 +313,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
         onOpenWeather: _openWeather,
         onOpenAdvisorHub: () => _openAdvisorHub(),
         onOpenCalendar: () => _openCalendar(),
+        languageController: _languageController,
       ),
     ];
 

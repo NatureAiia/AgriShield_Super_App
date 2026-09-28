@@ -84,6 +84,14 @@ def test_router_shona_and_ndebele_intents():
     assert advice_router.local_intent("Makonye ari mudura rechibage").route == "disease_scan"
 
 
+def test_router_prefixed_bantu_verbs():
+    # No word boundary before the stem, so plain \b patterns miss these —
+    # the substring pass must catch them.
+    assert advice_router.local_intent("Ngingahlanyela nini umumbu?").route == "recommendations"
+    assert advice_router.local_intent("Isibungu sihlasela umumbu wami").route == "disease_scan"
+    assert advice_router.local_intent("Yimalini umumbu eRenkini?").route == "prices"
+
+
 def test_chat_falls_back_to_offline_reply(monkeypatch):
     def _no_ai(message, history):
         raise ai_advice_service.AIUnavailable("no key")
@@ -95,6 +103,8 @@ def test_chat_falls_back_to_offline_reply(monkeypatch):
     assert body["route"] == "disease_scan"
     assert "Emamectin Benzoate" in body["reply"]
     assert body["code"] is None  # answered offline, not ai_unavailable
+    assert body["language"] == "sn"
+    assert body["source"] == "offline"
 
 
 def test_chat_still_ai_unavailable_when_nothing_matches(monkeypatch):

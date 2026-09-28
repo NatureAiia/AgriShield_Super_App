@@ -9,22 +9,22 @@ import 'api_config.dart';
 /// No mock: like RecommendationService, the router+AI logic only exists
 /// server-side, so this always requires the backend.
 abstract class ChatService {
-  Future<ChatMessage> ask(String message, List<ChatMessage> history);
+  Future<ChatMessage> ask(String message, List<ChatMessage> history, {String? language});
 }
 
 class HttpChatService implements ChatService {
   @override
-  Future<ChatMessage> ask(String message, List<ChatMessage> history) async {
+  Future<ChatMessage> ask(String message, List<ChatMessage> history, {String? language}) async {
+    final body = {
+      'message': message,
+      'history': history.map((m) => {'role': m.role, 'content': m.content}).toList(),
+      if (language != null) 'language': language,
+    };
     final response = await http
         .post(
           Uri.parse('${ApiConfig.baseUrl}/chat'),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'message': message,
-            'history': history
-                .map((m) => {'role': m.role, 'content': m.content})
-                .toList(),
-          }),
+          body: jsonEncode(body),
         )
         .timeout(const Duration(seconds: 25));
 
@@ -47,6 +47,8 @@ class HttpChatService implements ChatService {
       route: route,
       routeLabel: routeLabel,
       aiUnavailable: code == 'ai_unavailable',
+      language: data['language'] as String?,
+      source: data['source'] as String?,
     );
   }
 }
