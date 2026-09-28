@@ -1,6 +1,12 @@
 /// The one shared farmer/field record — docs/roadmap/README.md's
 /// "Foundation" — read by every V1 part rather than each owning its own copy.
 class Farmer {
+  /// Backend's Farmer.id (backend/app/models.py) — empty until the record
+  /// round-trips through sign-up/sign-in (HttpAuthService), same as every
+  /// other backend-only field here. Features that need to address a
+  /// specific farmer server-side (calendar, advisor requests) need this,
+  /// not phone, since phone is only the sign-in lookup key.
+  final String id;
   final String phone;
   final String name;
   final String location;
@@ -8,6 +14,7 @@ class Farmer {
   final String storageHub;
 
   const Farmer({
+    this.id = '',
     required this.phone,
     required this.name,
     required this.location,
@@ -27,8 +34,9 @@ class Farmer {
         storageHub: 'Mbare Collection Point',
       );
 
-  Farmer copyWith({String? phone, String? name, String? location, String? crop, String? storageHub}) {
+  Farmer copyWith({String? id, String? phone, String? name, String? location, String? crop, String? storageHub}) {
     return Farmer(
+      id: id ?? this.id,
       phone: phone ?? this.phone,
       name: name ?? this.name,
       location: location ?? this.location,
@@ -38,6 +46,7 @@ class Farmer {
   }
 
   Map<String, dynamic> toJson() => {
+        'id': id,
         'phone': phone,
         'name': name,
         'location': location,
@@ -46,6 +55,7 @@ class Farmer {
       };
 
   factory Farmer.fromJson(Map<String, dynamic> json) => Farmer(
+        id: json['id'] as String? ?? '',
         phone: json['phone'] as String? ?? '',
         name: json['name'] as String,
         location: json['location'] as String,

@@ -8,7 +8,7 @@ import os
 from . import models
 from .config import settings
 from .database import Base, engine
-from .routers import alerts, chat, farmers, prices, satellite, scans, storage, weather
+from .routers import advisors, alerts, calendar, chat, farmers, prices, satellite, scans, storage, weather
 
 # Lite mode: the ML routers need pandas/scikit-learn/numpy/ai-edge-litert,
 # which serverless (Vercel) and tight shared hosts can't install. Instead of
@@ -62,6 +62,8 @@ if not LITE:
 app.include_router(weather.router)
 app.include_router(prices.router)
 app.include_router(chat.router)
+app.include_router(advisors.router)
+app.include_router(calendar.router)
 
 # The hosted webapp calls this API from a browser, so CORS must allow its
 # origin. Empty CORS_ORIGINS = allow all (demo convenience, not prod).
