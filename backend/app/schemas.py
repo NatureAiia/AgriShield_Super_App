@@ -144,3 +144,23 @@ class PriceSnapshot(BaseModel):
 class PricesOut(BaseModel):
     prices: list[PriceSnapshot] = []
     data_source: str = ""
+
+
+class ChatMessageIn(BaseModel):
+    role: str  # "user" | "assistant"
+    content: str
+
+
+class ChatIn(BaseModel):
+    message: str
+    history: list[ChatMessageIn] = []
+
+
+class ChatOut(BaseModel):
+    reply: str = ""
+    route: str | None = None
+    route_label: str | None = None
+    # Set to "ai_unavailable" when ANTHROPIC_API_KEY is unset or the AI
+    # call failed — `reply` is then empty and the caller should fall back
+    # to `route`/`route_label` alone (see routers/chat.py).
+    code: str | None = None
