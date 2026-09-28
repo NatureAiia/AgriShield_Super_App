@@ -1,29 +1,50 @@
-# Python (backend/)
+# ================= Root =================
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# One-off deploy / demo bundles — never commit these
+*.zip
+*.tar.gz
+DEPLOY_*.md
+demo.db
+
+# ================= Backend (Python / FastAPI) =================
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
+.eggs/
 .pytest_cache/
+.coverage
+htmlcov/
 .venv/
 venv/
+.env/
 *.db
+*.sqlite3
+
+# Secrets — never commit (use backend/.env.example as the template)
 .env
+*.pem
+*.key
 
-# Flutter / Dart (app/)
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-build/
-*.iml
-.idea/
+# ================= Frontend — Flutter app (frontend/app) =================
+# (frontend/app also carries the stock Flutter .gitignore; these are belt-and-braces)
+frontend/app/.dart_tool/
+frontend/app/build/
+frontend/app/.flutter-plugins
+frontend/app/.flutter-plugins-dependencies
+frontend/app/.packages
+frontend/app/*.iml
+frontend/app/.idea/
 
-# Editor
-.vscode/
-.DS_Store
-
-# Web demo (web-demo/, Vercel Vite build)
-node_modules/
-web-demo/dist/
-web-demo/node_modules/
-web-demo/webapp-dist-cpanel.zip
-backend-src-cpanel.zip
+# ================= Frontend — Vite web (frontend/web) =================
+frontend/web/node_modules/
+frontend/web/dist/
+frontend/web/.vite/
+*.local

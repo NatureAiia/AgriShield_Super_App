@@ -8,12 +8,12 @@ alerts — all served by `../backend` (FastAPI + Postgres).
 
 ```bash
 # backend
-cd ../backend
+cd ../../backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload   # http://localhost:8000
 
 # webapp
-cd web-demo
+cd frontend/web
 npm install
 cp .env.example .env   # VITE_AGRISHIELD_API_URL=http://localhost:8000
 npm run dev
@@ -21,7 +21,7 @@ npm run dev
 
 ## Deploy
 
-**Backend (Render blueprint, `../backend/render.yaml`):**
+**Backend (Render blueprint, `../../backend/render.yaml`):**
 1. Render → New → Blueprint → point at repo.
 2. It provisions `agrishield-api` (Docker) + `agrishield-db` (Postgres).
 3. Set `CORS_ORIGINS` to the webapp URL, e.g. `https://agrishield.vercel.app`.
@@ -29,7 +29,7 @@ npm run dev
    `postgresql+pg8000://` rewrite is automatic in `app/config.py`).
 
 **Webapp (Vercel):**
-1. Vercel → New Project → Root Directory = `web-demo`.
+1. Vercel → New Project → Root Directory = `frontend/web`.
 2. Build `npm run build`, output `dist` (already in `vercel.json`).
 3. Env var: `VITE_AGRISHIELD_API_URL` = your Render API URL.
 4. Redeploy after changing env vars (Vite bakes them at build time).

@@ -2,7 +2,8 @@
 
 A super app for smallholder farmers in Zimbabwe — crop storage monitoring, offline disease screening, satellite field monitoring, and (later) a market/finance layer. Full scope, versioning, and the project's honesty principle: [`docs/roadmap/README.md`](docs/roadmap/README.md).
 
-- [`/app`](app) — Flutter (Android-first)
+- [`/frontend/app`](frontend/app) — Flutter (Android-first)
+- [`/frontend/web`](frontend/web) — Vite + React web build
 - [`/backend`](backend) — FastAPI + Postgres
 - [`/docs/roadmap`](docs/roadmap) — what's built, what's next, and why
 
@@ -21,7 +22,7 @@ Runs on `http://localhost:8000`. Defaults to local SQLite; copy `.env.example` t
 ### App
 
 ```bash
-cd app
+cd frontend/app
 flutter pub get
 flutter run
 ```

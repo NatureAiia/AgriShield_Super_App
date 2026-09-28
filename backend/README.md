@@ -41,7 +41,7 @@ No `AGRISHIELD_LITE` needed — auto-detected.
 
 ## cPanel deploy (Tremhost shared hosting)
 
-Frontend (`../web-demo/dist`, built with `.env.production`) goes to
+Frontend (`../frontend/web/dist`, built with `.env.production`) goes to
 `public_html` as static files. The API runs via cPanel's **Setup Python
 App**: application root = uploaded `backend/` folder, startup file =
 `passenger_wsgi.py`, application URL = your `api` subdomain. Set in the

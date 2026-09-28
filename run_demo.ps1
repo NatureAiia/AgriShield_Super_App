@@ -10,7 +10,7 @@ param(
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BackendDir = Join-Path $Root "backend"
-$AppDir = Join-Path $Root "app"
+$AppDir = Join-Path $Root "frontend/app"
 $ApiUrl = "http://localhost:$Port"
 
 function Write-Step([string]$Msg) { Write-Host "`n==> $Msg" -ForegroundColor Green }
@@ -68,7 +68,7 @@ try {
   } else {
     Write-Host "`nBackend is running in background job 'agrishield-backend'." -ForegroundColor Cyan
     Write-Host "Open docs or install Flutter, then run:" -ForegroundColor Cyan
-    Write-Host "  cd app; flutter run -d chrome --dart-define=AGRISHIELD_API_BASE_URL=$ApiUrl" -ForegroundColor White
+    Write-Host "  cd frontend/app; flutter run -d chrome --dart-define=AGRISHIELD_API_BASE_URL=$ApiUrl" -ForegroundColor White
     Write-Host "`nPress Enter to stop the backend and exit."
     Read-Host | Out-Null
   }
