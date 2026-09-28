@@ -208,6 +208,31 @@ class ActivityOut(ActivityIn):
     created_at: datetime
 
 
+class DroughtStatusOut(BaseModel):
+    risk_level: str
+    drought_zone_fraction: float
+    stressed_zone_fraction: float
+    reason: str
+    data_source: str = ""
+
+
+class DroughtReportIn(BaseModel):
+    farmer_id: str
+    district: str
+    risk_level: str
+    notes: str = ""
+
+
+class DroughtReportOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    district: str
+    risk_level: str
+    ticket: str
+    status: str
+    created_at: datetime
+
+
 class PriceSnapshot(BaseModel):
     commodity: str
     market: str

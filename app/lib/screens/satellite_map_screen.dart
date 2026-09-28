@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../models/drought_status.dart';
+import '../models/farmer.dart';
 import '../models/satellite_zone.dart';
+import '../services/drought_service.dart';
 import '../services/satellite_service.dart';
 import '../theme.dart';
 import '../widgets/app_card.dart';
@@ -8,7 +11,14 @@ import '../widgets/shimmer_box.dart';
 
 class SatelliteMapScreen extends StatefulWidget {
   final SatelliteService satelliteService;
-  const SatelliteMapScreen({super.key, required this.satelliteService});
+  final Farmer farmer;
+  final DroughtService droughtService;
+  const SatelliteMapScreen({
+    super.key,
+    required this.satelliteService,
+    required this.farmer,
+    required this.droughtService,
+  });
 
   @override
   State<SatelliteMapScreen> createState() => _SatelliteMapScreenState();
@@ -19,11 +29,18 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
   SatelliteZone? _selected;
   bool _loading = true;
   int _scanId = 0; // bumps on each refresh so the sweep replays
+  DroughtStatus? _drought;
 
   @override
   void initState() {
     super.initState();
     _refresh();
+    widget.droughtService.status().then((d) {
+      if (!mounted) return;
+      setState(() => _drought = d);
+    }).catchError((_) {
+      // Best-effort — the zone grid still renders without this banner.
+    });
   }
 
   Future<void> _refresh() async {
@@ -34,6 +51,27 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
       _loading = false;
       _scanId++;
     });
+  }
+
+  Future<void> _reportDrought() async {
+    final drought = _drought;
+    if (drought == null) return;
+    try {
+      final result = await widget.droughtService.report(
+        farmerId: widget.farmer.id,
+        district: widget.farmer.location,
+        riskLevel: drought.riskLevel,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Reported — ticket ${result.ticket}')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Couldn't submit the report — check your connection.")),
+      );
+    }
   }
 
   // Same semantic palette used for mold risk — one consistent color
@@ -90,6 +128,10 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
               ),
             ],
           ).animate().fadeIn(duration: 300.ms),
+          if (_drought != null) ...[
+            const SizedBox(height: 10),
+            _DroughtBanner(status: _drought!, onReport: _reportDrought).animate().fadeIn(duration: 300.ms),
+          ],
           const SizedBox(height: 10),
           if (_loading)
             AppCard(
@@ -243,6 +285,58 @@ class _SatelliteMapScreenState extends State<SatelliteMapScreen> {
         const SizedBox(width: 6),
         Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.onSurface)),
       ],
+    );
+  }
+}
+
+Color _droughtColor(BuildContext context, String riskLevel) {
+  switch (riskLevel) {
+    case 'Severe':
+      return AgriShieldStatus.high;
+    case 'Moderate':
+      return AgriShieldStatus.moderate;
+    case 'Watch':
+      return AgriShieldStatus.moderate;
+    default:
+      return AgriShieldStatus.low;
+  }
+}
+
+class _DroughtBanner extends StatelessWidget {
+  final DroughtStatus status;
+  final VoidCallback onReport;
+  const _DroughtBanner({required this.status, required this.onReport});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _droughtColor(context, status.riskLevel);
+    final reportable = status.riskLevel == 'Moderate' || status.riskLevel == 'Severe';
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(color.withValues(alpha: context.isDark ? 0.22 : 0.12), context.colors.surface),
+        borderRadius: BorderRadius.circular(AgriShieldRadii.card),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.grain, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('DROUGHT RISK: ${status.riskLevel.toUpperCase()}',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: color)),
+                const SizedBox(height: 2),
+                Text(status.reason, style: TextStyle(fontSize: 12, color: context.colors.onSurface.withValues(alpha: 0.75))),
+              ],
+            ),
+          ),
+          if (reportable)
+            TextButton(onPressed: onReport, child: const Text('Report to government')),
+        ],
+      ),
     );
   }
 }

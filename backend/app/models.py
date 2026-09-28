@@ -115,3 +115,23 @@ class Activity(Base):
     status: Mapped[str] = mapped_column(String, nullable=False, default="pending")
     source: Mapped[str] = mapped_column(String, nullable=False, default="manual")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class DroughtReport(Base):
+    """Drought early-warning escalation — a farmer (or, later, an AGRITEX
+    officer) flags a district's satellite-derived drought risk level up
+    to government/civil-protection contacts. No real government channel
+    is integrated yet (services/drought_service.py only aggregates the
+    still-mocked satellite feed), so this only logs the report and hands
+    back a ticket, same honesty convention as AdvisorRequest."""
+
+    __tablename__ = "drought_reports"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    farmer_id: Mapped[str] = mapped_column(String, ForeignKey("farmers.id"))
+    district: Mapped[str] = mapped_column(String, nullable=False)
+    risk_level: Mapped[str] = mapped_column(String, nullable=False)
+    notes: Mapped[str] = mapped_column(String, nullable=False, default="")
+    ticket: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    status: Mapped[str] = mapped_column(String, nullable=False, default="submitted")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

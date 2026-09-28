@@ -20,6 +20,7 @@ import 'services/auth_service.dart';
 import 'services/calendar_service.dart';
 import 'services/chat_service.dart';
 import 'services/disease_service.dart';
+import 'services/drought_service.dart';
 import 'services/messaging_service.dart';
 import 'services/recommendation_service.dart';
 import 'services/satellite_service.dart';
@@ -84,6 +85,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
   final WeatherService _weatherService = HttpWeatherService();
   final AdvisorService _advisorService = HttpAdvisorService();
   final CalendarService _calendarService = HttpCalendarService();
+  final DroughtService _droughtService = HttpDroughtService();
 
   // "Ask AgriShield"'s keyword router answers with a suite name
   // (backend/app/services/advice_router.py); only the suites with a real
@@ -295,7 +297,11 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
         onScheduleSpraying: (issue) => _openCalendar(prefillTitle: 'Spray for $issue'),
       ),
       RecommendationScreen(recommendationService: _recommendationService),
-      SatelliteMapScreen(satelliteService: _satelliteService),
+      SatelliteMapScreen(
+        satelliteService: _satelliteService,
+        farmer: farmer,
+        droughtService: _droughtService,
+      ),
       ProfileScreen(
         farmer: farmer,
         repository: _farmerRepository,
