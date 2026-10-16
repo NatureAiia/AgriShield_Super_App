@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:async';
 import 'models/farmer.dart';
 import 'repositories/farmer_repository.dart';
@@ -12,6 +11,7 @@ import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/recommendation_screen.dart';
 import 'screens/satellite_map_screen.dart';
+import 'screens/splash_screen.dart';
 import 'screens/storage_screen.dart';
 import 'screens/weather_screen.dart';
 import 'models/advisor.dart';
@@ -32,6 +32,7 @@ import 'theme.dart';
 import 'widgets/animated_nav_bar.dart';
 import 'widgets/demo_tour.dart';
 import 'widgets/offline_banner.dart';
+import 'widgets/ui_kit.dart';
 
 void main() {
   runApp(AgriShieldApp(themeController: ThemeController()));
@@ -112,14 +113,20 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
   // flow, true proceeds straight to the app — a returning, already-signed
   // -in farmer never sees the landing screen again.
   bool? _signedIn;
+  // Keep the branded splash up for a short, fixed minimum so it reads as
+  // a deliberate loading screen rather than a flicker.
+  bool _splashDone = false;
 
   static const _titles = [
-    'AgriShield', 'Storage Sensor', 'Disease Scan', 'Recommend', 'Satellite Map', 'Profile',
+    'AgriShield', 'Crop Storage', 'Leaf Scan', 'Farm Advice', 'Satellite View', 'My Profile',
   ];
 
   @override
   void initState() {
     super.initState();
+    Future.delayed(const Duration(milliseconds: 1600), () {
+      if (mounted) setState(() => _splashDone = true);
+    });
     _authService.isSignedIn().then((signedIn) {
       if (!mounted) return;
       setState(() => _signedIn = signedIn);
@@ -254,25 +261,88 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
     super.dispose();
   }
 
-  Widget _brandedLoading(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.asset('assets/branding/logo.jpeg', width: 64, height: 64, fit: BoxFit.cover),
-            )
-                .animate(onPlay: (c) => c.repeat(reverse: true))
-                .scaleXY(begin: 1.0, end: 1.06, duration: 900.ms, curve: Curves.easeInOut),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.secondary),
-            ),
-          ],
+  void _toggleTheme() => widget.themeController.toggle(Theme.of(context).brightness);
+
+  static String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).take(2);
+    final out = parts.map((p) => p[0].toUpperCase()).join();
+    return out.isEmpty ? 'A' : out;
+  }
+
+  static String _greeting() {
+    final h = DateTime.now().hour;
+    return h < 12 ? 'Mangwanani · Good morning' : h < 17 ? 'Masikati · Good afternoon' : 'Manheru · Good evening';
+  }
+
+  /// Home: avatar + greeting + name, like the design's "Welcome Back".
+  /// Other tabs: round back button, centered title, theme toggle.
+  PreferredSizeWidget _header(BuildContext context, Farmer farmer) {
+    final demoButton = CircleIconButton(
+      icon: _demoActive ? Icons.stop_rounded : Icons.play_arrow_rounded,
+      tooltip: _demoActive ? 'End 60s demo' : 'Play 60s demo',
+      onPressed: _demoActive ? _stopDemo : _startDemo,
+    );
+    final themeButton = ThemeToggleButton(onToggle: _toggleTheme);
+    final Widget content = _tab == 0
+        ? Row(
+            key: const ValueKey('home-header'),
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(colors: [context.colors.primary, context.colors.secondary]),
+                  boxShadow: context.softShadow,
+                ),
+                child: Text(_initials(farmer.name),
+                    style: TextStyle(color: context.colors.onPrimary, fontWeight: FontWeight.w700, fontSize: 16)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_greeting(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 12, color: context.palette.muted)),
+                    Text(farmer.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+              demoButton,
+              const SizedBox(width: 8),
+              themeButton,
+            ],
+          )
+        : Row(
+            key: ValueKey('page-header-$_tab'),
+            children: [
+              CircleIconButton(
+                icon: Icons.arrow_back_rounded,
+                tooltip: 'Back to home',
+                onPressed: () => setState(() => _tab = 0),
+              ),
+              Expanded(
+                child: Text(_titles[_tab],
+                    textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              ),
+              themeButton,
+            ],
+          );
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(76),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: AnimatedSwitcher(duration: const Duration(milliseconds: 220), child: content),
         ),
       ),
     );
@@ -280,16 +350,22 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
 
   @override
   Widget build(BuildContext context) {
-    if (_signedIn == null) return _brandedLoading(context);
+    if (!_splashDone || _signedIn == null) return const SplashScreen();
     if (_signedIn == false) {
-      return LandingScreen(authService: _authService, onAuthenticated: _onAuthenticated);
+      return LandingScreen(authService: _authService, onAuthenticated: _onAuthenticated, onToggleTheme: _toggleTheme);
     }
 
     final farmer = _farmer;
-    if (farmer == null) return _brandedLoading(context);
+    if (farmer == null) return const SplashScreen();
 
     final screens = [
-      HomeScreen(farmer: farmer, sensorService: _sensorService, messagingService: _messagingService),
+      HomeScreen(
+        farmer: farmer,
+        sensorService: _sensorService,
+        messagingService: _messagingService,
+        onOpenTab: (i) => setState(() => _tab = i),
+        onOpenWeather: _openWeather,
+      ),
       StorageScreen(sensorService: _sensorService),
       DiseaseScanScreen(
         diseaseService: _diseaseService,
@@ -318,41 +394,10 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset('assets/branding/logo.jpeg', fit: BoxFit.cover),
-          ),
-        ),
-        title: Text(_titles[_tab], key: ValueKey(_tab))
-            .animate(key: ValueKey(_tab))
-            .fadeIn(duration: 220.ms)
-            .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic, duration: 220.ms),
-        actions: [
-          IconButton(
-            icon: Icon(_demoActive ? Icons.stop_rounded : Icons.play_arrow_rounded,
-                key: ValueKey(_demoActive)),
-            tooltip: _demoActive ? 'End 60s demo' : 'Play 60s demo',
-            onPressed: _demoActive ? _stopDemo : _startDemo,
-          ),
-          ListenableBuilder(
-            listenable: widget.themeController,
-            builder: (context, _) => IconButton(
-              icon: Icon(widget.themeController.icon, key: ValueKey(widget.themeController.icon))
-                  .animate(key: ValueKey(widget.themeController.icon))
-                  .scaleXY(begin: 0.5, end: 1, curve: Curves.easeOutBack, duration: 300.ms)
-                  .fadeIn(duration: 200.ms),
-              tooltip: widget.themeController.label,
-              onPressed: widget.themeController.cycle,
-            ),
-          ),
-        ],
-      ),
+      appBar: _header(context, farmer),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openChat,
-        icon: const Icon(Icons.chat_bubble_outline),
+        icon: const Icon(Icons.chat_bubble_outline_rounded),
         label: const Text('Ask AgriShield'),
       ),
       body: Column(
@@ -392,7 +437,7 @@ class _AgriShieldHomeState extends State<AgriShieldHome> {
           NavItem(icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'Home'),
           NavItem(icon: Icons.thermostat_outlined, selectedIcon: Icons.thermostat, label: 'Storage'),
           NavItem(icon: Icons.camera_alt_outlined, selectedIcon: Icons.camera_alt, label: 'Scan'),
-          NavItem(icon: Icons.eco_outlined, selectedIcon: Icons.eco, label: 'Recommend'),
+          NavItem(icon: Icons.eco_outlined, selectedIcon: Icons.eco, label: 'Advice'),
           NavItem(icon: Icons.map_outlined, selectedIcon: Icons.map, label: 'Map'),
           NavItem(icon: Icons.person_outline, selectedIcon: Icons.person, label: 'Profile'),
         ],
