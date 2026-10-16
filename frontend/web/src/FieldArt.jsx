@@ -214,8 +214,21 @@ function LeafArt({ id }) {
   );
 }
 
+/* ---------- Real photos (optional) ----------
+ * Drop JPG/PNG/WebP files into frontend/assets/photos/ with these names and
+ * they replace the drawings automatically — no code changes needed:
+ *   onboarding · home · storage · scan · map · advice
+ * Any name that's missing keeps its drawing. */
+const PHOTO_FILES = import.meta.glob('../../assets/photos/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}', { eager: true, import: 'default' });
+const PHOTOS = Object.fromEntries(
+  Object.entries(PHOTO_FILES).map(([path, url]) => [path.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase(), url]),
+);
+const PHOTO_FOR = { sunrise: 'onboarding', day: 'home', storage: 'storage', leaf: 'scan', map: 'map', wheat: 'advice' };
+
 export default function FieldArt({ variant = 'day', className = '' }) {
   const id = useId().replace(/:/g, '');
+  const photo = PHOTOS[PHOTO_FOR[variant]];
+  if (photo) return <img className={`art photo ${className}`} src={photo} alt="" loading="lazy" decoding="async" />;
   const p = PALETTES[variant] || PALETTES.day;
   let body;
   if (variant === 'map') body = <MapArt id={id} />;

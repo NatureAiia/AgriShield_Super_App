@@ -47,7 +47,8 @@ class ServerDiseaseService implements DiseaseService {
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     return DiseaseResult(
       likelyIssue: data['likely_issue'] as String,
-      confidence: 1.0, // the backend returns a single best label, no per-class score
+      // Softmax probability of the top class (older backends sent none).
+      confidence: (data['confidence'] as num?)?.toDouble() ?? 1.0,
       advice: data['advice'] as String?,
     );
   }

@@ -470,3 +470,14 @@ nav.bottom button.active span { display: inline; }
 
 /* Dim illustrations slightly in dark mode so they sit well on dark surfaces */
 :root[data-theme='dark'] .art { filter: brightness(.78) saturate(.92); }
+
+/* Real photos dropped into frontend/assets/photos/ (see FieldArt.jsx) */
+img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Leaf-scan result */
+.steps { margin: 6px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.55; }
+.steps li::marker { color: var(--primary); font-weight: 700; }
+.more summary { cursor: pointer; font-size: 14px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+.more summary::after { content: '+'; color: var(--muted); }
+.more[open] summary::after { content: '–'; }
+.more summary::-webkit-details-marker { display: none; }

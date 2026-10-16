@@ -14,7 +14,7 @@ import {
   House, Thermometer, Camera, Map as MapIcon, Sprout, Phone, LogOut, MapPin,
   WifiOff, AlertTriangle, CheckCircle2, Leaf, Sun, Moon, Bell, ChevronRight,
   ArrowRight, ArrowLeft, ArrowUpRight, Droplets, CloudSun, RefreshCw, User,
-  ShieldCheck, Pencil,
+  ShieldCheck, Pencil, Stethoscope, Info,
 } from 'lucide-react';
 import { api, apiBase, session } from './api.js';
 import { useTheme } from './theme.js';
@@ -198,6 +198,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [alertOut, setAlertOut] = useState(null);
   const [diag, setDiag] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [cropOut, setCropOut] = useState(null);
   const [fertOut, setFertOut] = useState(null);
   const [selZone, setSelZone] = useState(null);
@@ -256,13 +257,20 @@ export default function App() {
   const runDiagnose = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = ''; // let the same photo be picked again
     setBusy(true); setErr(''); setDiag(null);
+    setPreview((old) => { if (old) URL.revokeObjectURL(old); return URL.createObjectURL(file); });
     try {
       const d = await api.diagnose(file);
       setDiag(d);
-      await api.logScan({ farmer_id: farmer.id, likely_issue: d.likely_issue, confidence: 0.8, source: 'server' });
+      await api.logScan({ farmer_id: farmer.id, likely_issue: d.likely_issue, confidence: d.confidence ?? 0.8, source: 'server' });
       await refresh();
-    } catch (e2) { fail(e2); } finally { setBusy(false); }
+    } catch (e2) {
+      const m = e2.message || '';
+      setErr(m === 'Method Not Allowed'
+        ? "Leaf diagnosis isn't switched on for this server yet. In the backend folder run: pip install -r requirements-ml.txt — then restart it."
+        : m === 'Failed to fetch' ? `Can't reach the AgriShield server at ${apiBase}.` : m);
+    } finally { setBusy(false); }
   };
 
   const sendAlert = async () => {
@@ -478,24 +486,93 @@ export default function App() {
         {/* ---------------- SCAN ---------------- */}
         {tab === 'scan' && (
           <div className="stack fadein">
-            <div className="viewport">
-              {busy && <div className="scanline" />}
-              <div>
-                <div className="scan-ic"><Leaf size={32} /></div>
-                <h3 style={{ margin: '0 0 4px' }}>Check a leaf</h3>
-                <p className="sub" style={{ marginBottom: 16 }}>Take or upload a clear photo of one leaf.</p>
-                <label className="btn btn-primary" style={{ cursor: 'pointer' }}>
-                  <Camera size={17} /> {busy ? 'Diagnosing…' : 'Choose photo'}
-                  <input type="file" accept="image/*" hidden onChange={runDiagnose} disabled={busy} />
+            <div className="viewport" style={preview ? { padding: 0, minHeight: 260 } : undefined}>
+              {preview && <img className="art" src={preview} alt="Your leaf photo" />}
+              {busy && <div className="scanline" style={{ zIndex: 2 }} />}
+              {!preview ? (
+                <div>
+                  <div className="scan-ic"><Leaf size={32} /></div>
+                  <h3 style={{ margin: '0 0 4px' }}>Check a leaf</h3>
+                  <p className="sub" style={{ marginBottom: 16 }}>Take or upload a clear photo of one leaf, in daylight, filling the frame.</p>
+                  <label className="btn btn-primary" style={{ cursor: 'pointer' }}>
+                    <Camera size={17} /> Choose photo
+                    <input type="file" accept="image/*" capture="environment" hidden onChange={runDiagnose} disabled={busy} />
+                  </label>
+                </div>
+              ) : (
+                <label className="btn btn-primary" style={{ cursor: 'pointer', position: 'absolute', bottom: 14, zIndex: 3 }}>
+                  <Camera size={17} /> {busy ? 'Analysing leaf…' : 'Scan another leaf'}
+                  <input type="file" accept="image/*" capture="environment" hidden onChange={runDiagnose} disabled={busy} />
                 </label>
-              </div>
+              )}
             </div>
+
             {diag && (
-              <div className="card fadein">
-                <span className="pill"><CheckCircle2 size={12} /> Server diagnosis</span>
-                <h3 style={{ marginTop: 10 }}>{diag.likely_issue}</h3>
-                <p className="sub">{diag.advice}</p>
-                <p className="note" style={{ justifyContent: 'flex-start', marginTop: 10 }}>First opinion only — confirm with an extension officer.</p>
+              <div className="card stack fadein">
+                <div className="card-head" style={{ marginBottom: 0 }}>
+                  <span className="ic" style={diag.healthy ? undefined : { background: 'var(--chip-sun)', color: 'var(--sun-ink)' }}>
+                    {diag.healthy ? <CheckCircle2 size={20} /> : <Stethoscope size={20} />}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <small>{diag.crop || 'Leaf'}</small>
+                    <h3>{diag.healthy ? 'Looks healthy' : (diag.disease || diag.likely_issue)}</h3>
+                  </div>
+                  {diag.confidence != null && <span className={`pill ${diag.low_confidence ? '' : 'solid'}`}>{Math.round(diag.confidence * 100)}%</span>}
+                </div>
+
+                {diag.confidence != null && (
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                      <span className="sub">How sure the model is</span>
+                      <b>{diag.confidence >= 0.85 ? 'Likely match' : diag.confidence >= 0.7 ? 'Possible match' : 'Not sure'}</b>
+                    </div>
+                    <div className="confbar"><div style={{ width: `${diag.confidence * 100}%` }} /></div>
+                  </div>
+                )}
+
+                {diag.low_confidence && (
+                  <div className="alert"><Info size={17} /><p>The model isn't sure. Retake the photo closer, in daylight, with one leaf filling the frame — or ask an extension officer.</p></div>
+                )}
+
+                {diag.healthy && <p className="sub">No disease found on this leaf. Keep checking your plants every week, especially after rain.</p>}
+
+                {!diag.healthy && diag.treatment?.length > 0 && (
+                  <div>
+                    <h3 style={{ fontSize: 14 }}>What to do</h3>
+                    <ol className="steps">{diag.treatment.map((t, i) => <li key={i}>{t}</li>)}</ol>
+                  </div>
+                )}
+
+                {!diag.healthy && diag.causes?.length > 0 && (
+                  <details className="more">
+                    <summary>Why it happens</summary>
+                    <ul className="steps">{diag.causes.map((t, i) => <li key={i}>{t}</li>)}</ul>
+                  </details>
+                )}
+
+                {diag.local_note && (
+                  <div className="panel" style={{ alignItems: 'flex-start', background: 'var(--chip-leaf)' }}>
+                    <MapPin size={18} color="var(--leaf-ink)" style={{ flex: 'none', marginTop: 2 }} />
+                    <p className="sub" style={{ color: 'var(--text)', whiteSpace: 'pre-line' }}>{diag.local_note}</p>
+                  </div>
+                )}
+
+                {diag.causes === undefined && <p className="sub" style={{ whiteSpace: 'pre-line' }}>{diag.advice}</p>}
+
+                {diag.alternatives?.length > 0 && (
+                  <div>
+                    <small className="sub">It could also be</small>
+                    <div className="chips" style={{ marginTop: 6, flexWrap: 'wrap' }}>
+                      {diag.alternatives.map((a, i) => (
+                        <span key={i} className="chip" style={{ cursor: 'default', fontSize: 12 }}>{a.crop} · {a.disease} · {Math.round(a.confidence * 100)}%</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="note" style={{ justifyContent: 'flex-start' }}>
+                  First opinion only — trained on PlantVillage photos of 14 crops (incl. maize, tomato, potato, pepper). Field photos are harder; confirm before spraying. {diag.model ? `Model: ${diag.model}.` : ''}
+                </p>
               </div>
             )}
             {scans.length > 0 && <div className="section-title"><h2>Scan history</h2><span>{scans.length}</span></div>}

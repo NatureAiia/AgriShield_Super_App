@@ -10,10 +10,30 @@ class FieldArt extends StatelessWidget {
   final FieldArtVariant variant;
   const FieldArt({super.key, this.variant = FieldArtVariant.day});
 
+  /// Optional real photos: put JPGs in frontend/app/assets/photos/ with
+  /// these names and they replace the drawings — no code changes needed.
+  /// A missing file just keeps the drawing.
+  static const photoFor = {
+    FieldArtVariant.sunrise: 'onboarding',
+    FieldArtVariant.day: 'home',
+    FieldArtVariant.storage: 'storage',
+    FieldArtVariant.leaf: 'scan',
+    FieldArtVariant.map: 'map',
+    FieldArtVariant.wheat: 'advice',
+  };
+
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    Widget art = CustomPaint(painter: _FieldPainter(variant), size: Size.infinite);
+    final drawing = CustomPaint(painter: _FieldPainter(variant), size: Size.infinite);
+    Widget art = Image.asset(
+      'assets/photos/${photoFor[variant]}.jpg',
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      gaplessPlayback: true,
+      errorBuilder: (context, error, stack) => drawing,
+    );
     if (dark) {
       // Dim slightly so illustrations sit well on dark surfaces.
       art = ColorFiltered(
