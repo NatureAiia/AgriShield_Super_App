@@ -8,9 +8,11 @@ import '../theme.dart';
 import '../widgets/animated_count.dart';
 import '../widgets/app_card.dart';
 import '../widgets/coming_soon_carousel.dart';
+import '../widgets/field_art.dart';
 import '../widgets/incoming_call_overlay.dart';
 import '../widgets/risk_badge.dart';
 import '../widgets/shimmer_box.dart';
+import '../widgets/ui_kit.dart';
 import 'farmer_story_screen.dart';
 
 /// Home dashboard — a hero card for the cooler's effect and a dense,
@@ -23,12 +25,17 @@ class HomeScreen extends StatefulWidget {
   final Farmer farmer;
   final SensorService sensorService;
   final MessagingService messagingService;
+  /// Jump to another bottom-nav tab (1 Storage, 2 Scan, 3 Advice, 4 Map).
+  final ValueChanged<int>? onOpenTab;
+  final VoidCallback? onOpenWeather;
 
   const HomeScreen({
     super.key,
     required this.farmer,
     required this.sensorService,
     required this.messagingService,
+    this.onOpenTab,
+    this.onOpenWeather,
   });
 
   @override
@@ -72,17 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _sendingAlert = false);
   }
 
-  // Time-of-day greeting; with the Shona toggle on, Shona first and the
-  // English after (Mangwanani / Masikati / Manheru).
-  static String _greeting(DateTime now, {required bool shona}) {
-    final (sn, en) = now.hour < 12
-        ? ('Mangwanani', 'Good morning,')
-        : now.hour < 17
-            ? ('Masikati', 'Good afternoon,')
-            : ('Manheru', 'Good evening,');
-    return shona ? '$sn — $en' : en;
-  }
-
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<StorageReading>(
@@ -96,11 +92,57 @@ class _HomeScreenState extends State<HomeScreen> {
             final gap = (outside != null && reading != null) ? outside.temperatureC - reading.temperatureC : null;
 
             return ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
               children: [
-                // Demo Journey header — the story anchor judges remember.
-                // One farmer, one loss at stake, 5 live proofs. Not decorative:
-                // the hours-saved line below is computed from live sensor gap.
+                // Hero: field illustration with three live stat chips —
+                // mold risk, inside-cooler temperature, humidity.
+                _HomeHero(farmer: widget.farmer, reading: reading, shona: _shona, onToggleLang: () => setState(() => _shona = !_shona))
+                    .animate()
+                    .fadeIn(duration: 350.ms)
+                    .scaleXY(begin: 0.97, end: 1, curve: Curves.easeOutCubic),
+                const SizedBox(height: 8),
+                SectionTitle(_shona ? 'Zvamunogona kuita · Your services' : 'Your services', trailing: widget.farmer.location),
+                SizedBox(
+                  height: 168,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    clipBehavior: Clip.none,
+                    children: [
+                      ServiceCard(
+                        art: const FieldArt(variant: FieldArtVariant.storage),
+                        badge: reading == null ? 'Live' : '${reading.temperatureC.toStringAsFixed(0)}°C',
+                        title: 'Crop Storage',
+                        subtitle: 'Temp, humidity, CO₂',
+                        onTap: () => widget.onOpenTab?.call(1),
+                      ),
+                      const SizedBox(width: 12),
+                      ServiceCard(
+                        art: const FieldArt(variant: FieldArtVariant.leaf),
+                        badge: 'Offline',
+                        title: 'Leaf Scan',
+                        subtitle: 'Disease screening',
+                        onTap: () => widget.onOpenTab?.call(2),
+                      ),
+                      const SizedBox(width: 12),
+                      ServiceCard(
+                        art: const FieldArt(variant: FieldArtVariant.map),
+                        badge: 'District',
+                        title: 'Satellite View',
+                        subtitle: 'Field health',
+                        onTap: () => widget.onOpenTab?.call(4),
+                      ),
+                      const SizedBox(width: 12),
+                      ServiceCard(
+                        art: const FieldArt(variant: FieldArtVariant.wheat),
+                        badge: 'Advice',
+                        title: 'Farm Advice',
+                        subtitle: 'Crops & fertilizer',
+                        onTap: () => widget.onOpenTab?.call(3),
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(delay: 80.ms, duration: 400.ms).slideX(begin: 0.05, end: 0, curve: Curves.easeOutCubic),
+                const SizedBox(height: 8),
                 _DemoStoryHeader(
                   farmer: widget.farmer,
                   hoursSaved: (outside != null && reading != null)
@@ -109,35 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   usdPerKg: _HomeScreenState.kMaizeUsdPerKg,
                   showShona: _shona,
                   onToggleLang: () => setState(() => _shona = !_shona),
-                ).animate().fadeIn(duration: 350.ms).slideY(begin: -0.15, end: 0, curve: Curves.easeOutCubic),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(_greeting(DateTime.now(), shona: _shona),
-                          style: TextStyle(color: context.colors.secondary, fontSize: 14)),
-                    ),
-                    GestureDetector(
-                      onTap: () => setState(() => _shona = !_shona),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: context.colors.outline),
-                          borderRadius: BorderRadius.circular(AgriShieldRadii.pill),
-                        ),
-                        child: Text(_shona ? 'SN • EN' : 'EN • SN',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: context.colors.secondary)),
-                      ),
-                    ),
-                  ],
-                )
-                    .animate()
-                    .fadeIn(duration: 350.ms)
-                    .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
-                Text(widget.farmer.name, style: context.text.headlineSmall)
-                    .animate()
-                    .fadeIn(delay: 60.ms, duration: 350.ms)
-                    .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
+                ).animate().fadeIn(delay: 120.ms, duration: 350.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
                 const SizedBox(height: 16),
                 _DoThisNow(crop: widget.farmer.crop, reading: reading)
                     .animate()
@@ -205,31 +219,39 @@ class _HomeScreenState extends State<HomeScreen> {
                     ).animate().fadeIn(delay: 240.ms, duration: 400.ms).slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
                   ],
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: reading == null || _sendingAlert ? null : () => _sendDemoAlert(reading),
-                    icon: _sendingAlert
-                        ? SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onSecondary),
-                          )
-                        : const Icon(Icons.phone_forwarded),
-                    label: Text(_sendingAlert
+                SectionTitle(_shona ? 'Zviito zvekukurumidza · Instant actions' : 'Instant actions'),
+                ActionList(children: [
+                  ActionRow(
+                    icon: _sendingAlert ? Icons.hourglass_top_rounded : Icons.phone_forwarded_rounded,
+                    title: _sendingAlert
                         ? (_shona ? 'Kufonera murimi… • Calling…' : 'Calling farmer…')
-                        : (_shona ? 'Fonera murimi izvozvi • Call the farmer' : 'Call the farmer now')),
+                        : (_shona ? 'Fonera murimi • Call the farmer' : 'Call the farmer now'),
+                    subtitle: _shona ? 'Shona + English · voice + SMS · pasina internet' : 'Shona + English · voice + SMS · works offline',
+                    onTap: reading == null || _sendingAlert ? null : () => _sendDemoAlert(reading),
                   ),
-                ).animate().fadeIn(delay: 320.ms, duration: 400.ms).slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
-                const SizedBox(height: 6),
-                Text(
-                  _shona
-                      ? 'Yambiro inotumirwa neShona neChirungu — voice + SMS. Inoshanda pasina internet.'
-                      : 'Alert goes in Shona + English — voice + SMS. Works without internet.',
-                  style: TextStyle(fontSize: 11, color: context.colors.onSurface.withValues(alpha: 0.6)),
-                  textAlign: TextAlign.center,
-                ),
+                  ActionRow(
+                    icon: Icons.thermostat_rounded,
+                    tone: ChipTone.sun,
+                    title: _shona ? 'Ongorora dura · Check storage' : 'Check storage',
+                    subtitle: 'Live temperature, humidity and CO₂',
+                    onTap: () => widget.onOpenTab?.call(1),
+                  ),
+                  ActionRow(
+                    icon: Icons.camera_alt_rounded,
+                    tone: ChipTone.sky,
+                    title: _shona ? 'Tora mufananidzo weshizha · Scan a leaf' : 'Scan a leaf',
+                    subtitle: 'First-opinion disease check',
+                    onTap: () => widget.onOpenTab?.call(2),
+                  ),
+                  if (widget.onOpenWeather != null)
+                    ActionRow(
+                      icon: Icons.wb_cloudy_rounded,
+                      tone: ChipTone.sky,
+                      title: _shona ? 'Mamiriro ekunze · Weather' : 'Weather & spraying',
+                      subtitle: 'Is it safe to spray today?',
+                      onTap: widget.onOpenWeather,
+                    ),
+                ]).animate().fadeIn(delay: 320.ms, duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
                 const SizedBox(height: 12),
                 _StoryLink(
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FarmerStoryScreen())),
@@ -651,6 +673,125 @@ class _StoryLink extends StatelessWidget {
             Icon(Icons.chevron_right_rounded, color: context.colors.onSurface.withValues(alpha: 0.5)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Top-of-home hero: a field illustration with the crop/hub tag, a
+/// language toggle, and three glassy stat chips over it — the same layout
+/// as the design's Soil Condition / Weather / Air Quality row, filled with
+/// AgriShield's real live signals.
+class _HomeHero extends StatelessWidget {
+  final Farmer farmer;
+  final StorageReading? reading;
+  final bool shona;
+  final VoidCallback onToggleLang;
+
+  const _HomeHero({required this.farmer, required this.reading, required this.shona, required this.onToggleLang});
+
+  @override
+  Widget build(BuildContext context) {
+    final r = reading;
+    final risk = r == null
+        ? '—'
+        : switch (r.moldRisk) {
+            MoldRisk.low => shona ? 'Zvakanaka · Low' : 'Low risk',
+            MoldRisk.moderate => shona ? 'Chenjerai · Watch' : 'Watch',
+            MoldRisk.high => shona ? 'Njodzi · High' : 'High risk',
+          };
+    return Container(
+      height: 250,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(28), boxShadow: context.softShadow),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const FieldArt(variant: FieldArtVariant.day),
+          Positioned(
+            top: 14,
+            left: 14,
+            right: 14,
+            child: Row(
+              children: [
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: context.colors.surface.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(AgriShieldRadii.pill),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(color: context.colors.primary, shape: BoxShape.circle),
+                        ).animate(onPlay: (c) => c.repeat(reverse: true)).fade(begin: 1, end: 0.35, duration: 700.ms),
+                        const SizedBox(width: 7),
+                        Flexible(
+                          child: Text('${farmer.crop} · ${farmer.location}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: context.colors.onSurface)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: onToggleLang,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: context.colors.surface.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(AgriShieldRadii.pill),
+                    ),
+                    child: Text(shona ? 'SN • EN' : 'EN • SN',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: context.colors.primary)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 12,
+            child: Row(
+              children: [
+                Expanded(
+                  child: HeroStat(
+                    label: shona ? 'Chakuvhuvhu · Mold' : 'Mold risk',
+                    value: risk,
+                    icon: Icons.verified_user_outlined,
+                    tone: ChipTone.leaf,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: HeroStat(
+                    label: shona ? 'Kupisa · Temp' : 'In cooler',
+                    value: r == null ? '—' : '${r.temperatureC.toStringAsFixed(1)}°C',
+                    icon: Icons.thermostat_rounded,
+                    tone: ChipTone.sun,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: HeroStat(
+                    label: shona ? 'Unyoro · Humidity' : 'Humidity',
+                    value: r == null ? '—' : '${r.humidityPercent.toStringAsFixed(0)}%',
+                    icon: Icons.water_drop_outlined,
+                    tone: ChipTone.sky,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

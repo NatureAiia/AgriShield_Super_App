@@ -16,6 +16,21 @@ class ThemeController extends ValueNotifier<ThemeMode> {
     value = ThemeMode.values.firstWhere((m) => m.name == stored, orElse: () => ThemeMode.system);
   }
 
+  /// One-tap light ⇄ dark switch. Starts from whatever is on screen right
+  /// now (so "system" flips to the opposite of the phone's current mode).
+  Future<void> toggle(Brightness current) async {
+    value = current == Brightness.dark ? ThemeMode.light : ThemeMode.dark;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_storageKey, value.name);
+  }
+
+  /// Back to following the phone's own light/dark setting.
+  Future<void> useSystem() async {
+    value = ThemeMode.system;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_storageKey, value.name);
+  }
+
   Future<void> cycle() async {
     const order = [ThemeMode.system, ThemeMode.light, ThemeMode.dark];
     value = order[(order.indexOf(value) + 1) % order.length];

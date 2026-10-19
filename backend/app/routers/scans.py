@@ -33,10 +33,27 @@ if _DIAGNOSE_AVAILABLE:
         the on-device flow does."""
         image_bytes = await file.read()
         try:
-            label, advice = disease_model_service.diagnose(image_bytes)
+            result = disease_model_service.diagnose_detailed(image_bytes)
         except Exception as exc:
-            raise HTTPException(status_code=422, detail=f"Could not diagnose image: {exc}") from exc
-        return schemas.DiseaseDiagnosisOut(likely_issue=label, advice=advice)
+            raise HTTPException(
+                status_code=422,
+                detail="Could not read that photo. Try a clear JPG or PNG of a single leaf.",
+            ) from exc
+        return schemas.DiseaseDiagnosisOut(**result)
+
+else:
+
+    @router.post("/diagnose")
+    async def diagnose_unavailable():
+        # Without this stub, POST /scans/diagnose falls through to
+        # GET /scans/{farmer_id} and the app just sees "Method Not Allowed".
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Leaf diagnosis isn't switched on for this server. In the backend folder run: "
+                "pip install -r requirements-ml.txt — then restart the server."
+            ),
+        )
 
 
 @router.post("", response_model=schemas.DiseaseScanOut)

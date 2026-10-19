@@ -55,12 +55,30 @@ class DiseaseScanOut(DiseaseScanIn):
     scanned_at: datetime
 
 
+class DiagnosisAlternative(BaseModel):
+    crop: str
+    disease: str
+    confidence: float
+
+
 class DiseaseDiagnosisOut(BaseModel):
     """Response for the synchronous server-side diagnosis endpoint —
     distinct from DiseaseScanOut, which is the logged/synced record."""
 
     likely_issue: str
     advice: str
+    # Richer fields (all optional so older clients keep working).
+    label: str | None = None
+    crop: str | None = None
+    disease: str | None = None
+    healthy: bool | None = None
+    confidence: float | None = None
+    low_confidence: bool | None = None
+    causes: list[str] = []
+    treatment: list[str] = []
+    local_note: str | None = None
+    alternatives: list[DiagnosisAlternative] = []
+    model: str | None = None
 
 
 class CropRecommendationIn(BaseModel):

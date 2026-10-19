@@ -2,9 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AgriShield — Demo Day</title>
-    <meta name="description" content="AgriShield demo-day prototype. Sample data only — no backend, no real transactions." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>AgriShield</title>
+    <meta name="description" content="AgriShield — crop storage monitoring, disease screening and satellite field monitoring for smallholder farmers in Zimbabwe." />
+    <meta name="theme-color" content="#EAF5EE" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      // Apply the saved (or system) theme before React loads, so there's no flash.
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem('agrishield.theme'); } catch (e) {}
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
