@@ -460,13 +460,6 @@ nav.bottom button.active span { display: inline; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
-/* Desktop: show the app as a phone-sized card */
-@media (min-width: 700px) {
-  body { padding: 24px 0; }
-  .shell { border-radius: 36px; overflow: hidden; min-height: calc(100vh - 48px); box-shadow: var(--shadow); }
-  .onboard { min-height: calc(100vh - 48px); }
-  nav.bottom { bottom: 38px; }
-}
 
 /* Dim illustrations slightly in dark mode so they sit well on dark surfaces */
 :root[data-theme='dark'] .art { filter: brightness(.78) saturate(.92); }
@@ -481,3 +474,131 @@ img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: c
 .more summary::after { content: '+'; color: var(--muted); }
 .more[open] summary::after { content: '–'; }
 .more summary::-webkit-details-marker { display: none; }
+
+
+/* =====================================================================
+   RESPONSIVE LAYOUT
+   Phone  (< 700px)    : app layout - bottom tab bar, single column.
+   Tablet (700-1023px) : wider single column, bottom bar, grids open up.
+   Desktop (>= 1024px) : web-app layout - left sidebar, top bar,
+                         multi-column dashboard.
+   ===================================================================== */
+
+/* Mobile defaults for the extra pieces */
+.block { display: flex; flex-direction: column; gap: 14px; }
+.nav-brand, .nav-foot, .onboard-feats { display: none; }
+
+/* ---------- Tablet ---------- */
+@media (min-width: 700px) {
+  .shell { max-width: 760px; }
+  main { padding: 0 28px 28px; }
+  .header, .page-head { padding-left: 28px; padding-right: 28px; }
+  .hscroll { display: grid; grid-template-columns: repeat(4, 1fr); overflow: visible; margin: 0; padding: 4px 0 10px; }
+  .svc { flex: none; }
+  .tiles { grid-template-columns: repeat(4, 1fr); }
+  .hero { min-height: 300px; }
+  .hero.short { min-height: 200px; }
+  nav.bottom { max-width: 560px; }
+  nav.bottom button span { display: inline; }
+  nav.bottom button { flex: 1; }
+  .onboard-body { max-width: 560px; margin-left: auto; margin-right: auto; }
+  .auth-sheet { max-width: 520px; margin-left: auto; margin-right: auto; }
+}
+
+/* ---------- Desktop web app ---------- */
+@media (min-width: 1024px) {
+  :root { --sidebar: 248px; }
+  body { background: var(--bg); }
+  .shell { max-width: none; min-height: 100vh; padding: 0 0 32px var(--sidebar); }
+  .shell.no-nav { padding: 0; }
+
+  /* Sidebar (the bottom bar turns into a left rail) */
+  nav.bottom {
+    top: 0; bottom: 0; left: 0; transform: none;
+    width: var(--sidebar); max-width: none; height: 100vh;
+    flex-direction: column; justify-content: flex-start; gap: 4px;
+    border-radius: 0; border: 0; border-right: 1px solid var(--line);
+    padding: 22px 14px; box-shadow: none; background: var(--surface);
+  }
+  nav.bottom button {
+    flex: none; width: 100%; height: 46px; justify-content: flex-start; gap: 12px;
+    padding: 0 16px; font-size: 14px; font-weight: 500;
+  }
+  nav.bottom button span { display: inline; }
+  nav.bottom button:hover:not(.active) { background: var(--surface-2); color: var(--text); }
+  nav.bottom button.active { flex: none; font-weight: 600; }
+  .nav-brand { display: flex; align-items: center; gap: 10px; padding: 0 6px 22px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .nav-brand img { width: 42px; height: 42px; border-radius: 999px; }
+  .nav-brand b { display: block; font-size: 17px; color: var(--primary); }
+  .nav-brand small { display: block; font-size: 11px; color: var(--muted); }
+  .nav-foot {
+    display: flex; align-items: center; gap: 10px; margin-top: auto;
+    padding: 12px; border-radius: 18px; background: var(--surface-2);
+  }
+  .nav-foot b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nav-foot small { display: block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Top bar + content width */
+  .header, .page-head { padding: 22px 36px 16px; max-width: 1240px; margin: 0 auto; width: 100%; }
+  .page-head { grid-template-columns: 1fr 44px; }
+  .page-head .back { display: none; }
+  .page-head h1 { text-align: left; font-size: 24px; }
+  .who b { font-size: 22px; }
+  main { padding: 0 36px 36px; max-width: 1240px; margin: 0 auto; width: 100%; }
+  main > .alert { max-width: 760px; }
+
+  /* Home dashboard */
+  .home {
+    display: grid; gap: 22px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "hero hero weather"
+      "strip strip strip"
+      "services services services"
+      "actions scans scans";
+    align-items: start;
+  }
+  .b-hero { grid-area: hero; min-height: 340px; }
+  .b-weather { grid-area: weather; }
+  .b-strip { grid-area: strip; margin: 0; justify-self: start; }
+  .b-services { grid-area: services; }
+  .b-actions { grid-area: actions; }
+  .b-scans { grid-area: scans; }
+  .b-scans .tiles { grid-template-columns: repeat(3, 1fr); }
+  .stat-row { left: 18px; right: 18px; bottom: 18px; gap: 12px; }
+  .stat { padding: 14px; }
+  .stat b { font-size: 16px; }
+  .svc-art { height: 130px; }
+
+  /* Inner pages: two-column grid */
+  .page { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; }
+  .page > .full { grid-column: 1 / -1; }
+  .page > .hero { min-height: 260px; height: 100%; }
+  .page > .hero.full { min-height: 220px; }
+  .page .zones { max-width: 460px; margin: 0 auto; width: 100%; }
+  .page .viewport { min-height: 420px !important; }
+
+  /* Onboarding: full-screen photo with a left-aligned web hero */
+  .onboard { min-height: 100vh; }
+  .onboard::after { background: linear-gradient(90deg, rgba(4,14,9,.88) 0%, rgba(4,14,9,.65) 38%, rgba(0,0,0,0) 72%); }
+  .onboard-top { padding: 28px 48px; }
+  .onboard-body { margin: auto 0; max-width: 680px; padding: 0 48px 48px; text-align: left; }
+  .onboard-body h2 { font-size: 44px; line-height: 1.12; }
+  .onboard-body p { margin: 18px 0 22px; font-size: 16px; max-width: 480px; }
+  .onboard-feats { display: flex; flex-direction: column; gap: 14px; list-style: none; padding: 0; margin: 0 0 30px; }
+  .onboard-feats li { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; color: rgba(255,255,255,.8); }
+  .onboard-feats li svg { flex: none; margin-top: 2px; color: #8fe0b1; }
+  .onboard-feats b { display: block; color: #fff; font-weight: 600; }
+  .slide-btn { max-width: 380px; }
+
+  /* Sign in / sign up: split screen */
+  .shell.no-nav:has(.auth-hero) { display: grid; grid-template-columns: 1.1fr 1fr; min-height: 100vh; }
+  .auth-hero { height: auto; min-height: 100vh; border-radius: 0; }
+  .auth-sheet { margin: 0; align-self: center; justify-self: center; width: 100%; max-width: 460px; padding: 40px 24px; }
+}
+
+@media (min-width: 1440px) {
+  :root { --sidebar: 272px; }
+  .onboard-body { padding-left: 80px; }
+  .onboard-top { padding-left: 80px; padding-right: 80px; }
+}

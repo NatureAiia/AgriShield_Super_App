@@ -107,6 +107,11 @@ function Landing({ onEnter, theme, toggle }) {
         <div className="onboard-body fadein">
           <h2>Protecting the Future of Zimbabwe's Harvests</h2>
           <p>Storage monitoring, leaf disease screening and satellite field checks — built for smallholder farmers, even with no signal.</p>
+          <ul className="onboard-feats">
+            <li><Thermometer size={18} /><span><b>Crop storage</b>Live temperature, humidity and CO₂ with mold-risk alerts</span></li>
+            <li><Leaf size={18} /><span><b>Leaf scan</b>Photo-based disease check with treatment steps</span></li>
+            <li><MapIcon size={18} /><span><b>Satellite view</b>Field health and drought risk across your district</span></li>
+          </ul>
           <button className="slide-btn" onClick={onEnter}>
             <span className="knob"><ArrowRight size={20} /></span>
             <span className="lbl-txt">Get Started</span>
@@ -342,7 +347,7 @@ export default function App() {
         </header>
       ) : (
         <header className="page-head">
-          <button className="icon-btn" onClick={() => setTab('home')} aria-label="Back to home"><ArrowLeft size={19} /></button>
+          <button className="icon-btn back" onClick={() => setTab('home')} aria-label="Back to home"><ArrowLeft size={19} /></button>
           <h1>{TITLES[tab]}</h1>
           <ThemeButton theme={theme} toggle={toggle} />
         </header>
@@ -353,8 +358,8 @@ export default function App() {
 
         {/* ---------------- HOME ---------------- */}
         {tab === 'home' && (
-          <div className="stack fadein">
-            <div className="hero">
+          <div className="stack home fadein">
+            <div className="hero b-hero">
               <FieldArt variant="day" />
               <div className="hero-content">
                 <span className="hero-tag"><span className="live-dot" style={{ color: 'var(--primary)' }} />{farmer.crop} · {farmer.storage_hub}</span>
@@ -366,8 +371,9 @@ export default function App() {
               </div>
             </div>
 
-            <div className="offline-strip"><WifiOff size={14} />Works offline — data syncs when you're back online</div>
+            <div className="offline-strip b-strip"><WifiOff size={14} />Works offline — data syncs when you're back online</div>
 
+            <div className="block b-services">
             <div className="section-title"><h2>Your services</h2><span>{farmer.location}</span></div>
             <div className="hscroll">
               <button className="svc" onClick={() => setTab('storage')}>
@@ -387,7 +393,9 @@ export default function App() {
                 <b>Farm Advice</b><span>Crops & fertilizer</span>
               </button>
             </div>
+            </div>
 
+            <div className="block b-actions">
             <div className="section-title"><h2>Instant actions</h2></div>
             <div className="list">
               <ActionRow icon={Phone} title={busy ? 'Sending…' : 'Alert me now'} sub="SMS / voice check on your store" onClick={sendAlert} disabled={busy} />
@@ -402,8 +410,9 @@ export default function App() {
                 <p className="sub" style={{ marginTop: 8 }}>{alertOut.detail}</p>
               </div>
             )}
+            </div>
 
-            <div className="card">
+            <div className="card b-weather">
               <div className="card-head">
                 <span className="ic" style={{ background: 'var(--chip-sky)', color: 'var(--sky-ink)' }}><CloudSun size={19} /></span>
                 <div><h3>Weather · Harare</h3><small>{HARARE.lat}, {HARARE.lon}</small></div>
@@ -421,6 +430,7 @@ export default function App() {
               ) : <p className="sub">Weather unavailable — check your connection.</p>}
             </div>
 
+            <div className="block b-scans">
             <div className="section-title"><h2>Recent scans</h2>{scans.length > 0 && <button onClick={() => setTab('scan')}>See all</button>}</div>
             {scans.length ? (
               <div className="tiles">
@@ -434,12 +444,13 @@ export default function App() {
                 ))}
               </div>
             ) : <div className="card"><p className="sub">No scans yet — try scanning a leaf.</p></div>}
+            </div>
           </div>
         )}
 
         {/* ---------------- STORAGE ---------------- */}
         {tab === 'storage' && (
-          <div className="stack fadein">
+          <div className="stack page fadein">
             <div className="hero short">
               <FieldArt variant="storage" />
               <div className="hero-content"><span className="hero-tag"><MapPin size={12} />{farmer.storage_hub}</span></div>
@@ -469,8 +480,9 @@ export default function App() {
               </div>
               <button className="btn btn-primary btn-block" disabled={busy}>{busy ? 'Saving…' : 'Save reading'}</button>
             </form>
-            {readings.length > 0 && <div className="section-title"><h2>History</h2><span>{plural(readings.length, 'reading')}</span></div>}
             {readings.length > 0 && (
+              <div className="block">
+              <div className="section-title"><h2>History</h2><span>{plural(readings.length, 'reading')}</span></div>
               <div className="list">
                 {readings.map((r) => (
                   <div key={r.id} className="row" style={{ cursor: 'default' }}>
@@ -479,13 +491,14 @@ export default function App() {
                   </div>
                 ))}
               </div>
+              </div>
             )}
           </div>
         )}
 
         {/* ---------------- SCAN ---------------- */}
         {tab === 'scan' && (
-          <div className="stack fadein">
+          <div className="stack page fadein">
             <div className="viewport" style={preview ? { padding: 0, minHeight: 260 } : undefined}>
               {preview && <img className="art" src={preview} alt="Your leaf photo" />}
               {busy && <div className="scanline" style={{ zIndex: 2 }} />}
@@ -575,8 +588,9 @@ export default function App() {
                 </p>
               </div>
             )}
-            {scans.length > 0 && <div className="section-title"><h2>Scan history</h2><span>{scans.length}</span></div>}
             {scans.length > 0 && (
+              <div className="block">
+              <div className="section-title"><h2>Scan history</h2><span>{scans.length}</span></div>
               <div className="list">
                 {scans.map((s) => (
                   <div key={s.id} className="row" style={{ cursor: 'default' }}>
@@ -585,13 +599,14 @@ export default function App() {
                   </div>
                 ))}
               </div>
+              </div>
             )}
           </div>
         )}
 
         {/* ---------------- MAP ---------------- */}
         {tab === 'map' && (
-          <div className="stack fadein">
+          <div className="stack page fadein">
             <div className="hero short">
               <FieldArt variant="map" />
               <div className="hero-content"><span className="hero-tag"><MapPin size={12} />Mashonaland East · district view</span></div>
@@ -618,12 +633,12 @@ export default function App() {
 
         {/* ---------------- ADVISE ---------------- */}
         {tab === 'advise' && (
-          <div className="stack fadein">
-            <div className="hero short">
+          <div className="stack page fadein">
+            <div className="hero short full">
               <FieldArt variant="wheat" />
               <div className="hero-content"><span className="hero-tag"><Sprout size={12} />Soil-based recommendations</span></div>
             </div>
-            <div className="chips">
+            <div className="chips full">
               {[['crop', 'Crop pick'], ['fert', 'Fertilizer'], ['prices', 'Market prices']].map(([id, l]) => (
                 <button key={id} className={`chip ${adviseTab === id ? 'on' : ''}`} onClick={() => setAdviseTab(id)}>{l}</button>
               ))}
@@ -681,7 +696,7 @@ export default function App() {
             )}
 
             {adviseTab === 'prices' && (
-              <div className="fadein stack">
+              <div className="fadein stack full">
                 {prices?.prices?.length ? (
                   <div className="list">
                     {prices.prices.map((p, i) => (
@@ -701,7 +716,7 @@ export default function App() {
 
         {/* ---------------- PROFILE ---------------- */}
         {tab === 'profile' && (
-          <div className="stack fadein">
+          <div className="stack page fadein">
             <div className="card stack">
               <div className="card-head" style={{ marginBottom: 0 }}>
                 <div className="avatar">{initials(farmer.name)}</div>
@@ -738,6 +753,7 @@ export default function App() {
               </div>
             )}
 
+            <div className="block">
             <div className="section-title"><h2>Settings</h2></div>
             <div className="list">
               <div className="row" style={{ cursor: 'default' }}>
@@ -751,17 +767,23 @@ export default function App() {
                 <ChevronRight size={18} className="chev" />
               </button>
             </div>
-            <p className="note">Server: {apiBase}</p>
+            </div>
+            <p className="note full">Server: {apiBase}</p>
           </div>
         )}
       </main>
 
-      <nav className="bottom">
+      <nav className="bottom" aria-label="Main">
+        <div className="nav-brand"><img src={brandLogo} alt="" /><div><b>AgriShield</b><small>Keep your harvest safe</small></div></div>
         {TABS.map((t) => (
           <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)} aria-label={t.label}>
             <t.icon size={20} /><span>{t.label}</span>
           </button>
         ))}
+        <div className="nav-foot">
+          <div className="avatar" style={{ width: 38, height: 38, fontSize: 13 }}>{initials(farmer.name)}</div>
+          <div style={{ minWidth: 0 }}><b>{farmer.name}</b><small>{farmer.location}</small></div>
+        </div>
       </nav>
     </div>
   );
